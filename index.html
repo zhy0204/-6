@@ -4,156 +4,162 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>AIDC 生態保費試算 - 智慧戰情室</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
-/* 💎 頂級高質感 UI 設計變數 */
+/* 💎 頂級 SaaS 質感美學變數 */
 :root[data-theme="cyber"] {
-  --bg: #090d16; --card: rgba(17, 24, 39, 0.75); --card-hover: rgba(30, 41, 59, 0.85);
-  --ink: #f8fafc; --mut: #94a3b8; --line: rgba(255, 255, 255, 0.08);
-  --accent: #38bdf8; --accent-glow: rgba(56, 189, 248, 0.25);
-  --radius: 20px; --shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+  --bg: #090a0f;
+  --card: #121622;
+  --card-hover: #181d2e;
+  --ink: #f8fafc;
+  --mut: #94a3b8;
+  --line: rgba(255, 255, 255, 0.07);
+  --accent: #38bdf8;
+  --accent-glow: rgba(56, 189, 248, 0.2);
+  --radius: 16px;
+  --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
 }
 :root[data-theme="minimal"] {
-  --bg: #f1f5f9; --card: rgba(255, 255, 255, 0.9); --card-hover: rgba(255, 255, 255, 1);
-  --ink: #0f172a; --mut: #64748b; --line: rgba(0, 0, 0, 0.06);
-  --accent: #0284c7; --accent-glow: rgba(2, 132, 199, 0.15);
-  --radius: 18px; --shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.08);
+  --bg: #fafafa;
+  --card: #ffffff;
+  --card-hover: #f4f4f5;
+  --ink: #09090b;
+  --mut: #71717a;
+  --line: #e4e4e7;
+  --accent: #0284c7;
+  --accent-glow: rgba(2, 132, 199, 0.1);
+  --radius: 16px;
+  --shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
 }
 :root[data-theme="emerald"] {
-  --bg: #022c22; --card: rgba(6, 78, 59, 0.65); --card-hover: rgba(4, 120, 87, 0.75);
-  --ink: #ecfdf5; --mut: #a7f3d0; --line: rgba(255, 255, 255, 0.1);
-  --accent: #34d399; --accent-glow: rgba(52, 211, 153, 0.25);
-  --radius: 20px; --shadow: 0 20px 40px -15px rgba(2, 44, 34, 0.8);
+  --bg: #041410;
+  --card: #09261f;
+  --card-hover: #0e372e;
+  --ink: #ecfdf5;
+  --mut: #6ee7b7;
+  --line: rgba(52, 211, 153, 0.15);
+  --accent: #10b981;
+  --accent-glow: rgba(16, 185, 129, 0.25);
+  --radius: 16px;
+  --shadow: 0 10px 30px -10px rgba(4, 20, 16, 0.8);
 }
 
 * { box-sizing: border-box; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
-  font-family: 'Outfit', 'Noto Sans TC', sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Noto Sans TC', sans-serif;
   font-size: 14.5px; line-height: 1.6;
-  background-image: radial-gradient(circle at 15% 15%, var(--accent-glow) 0%, transparent 40%),
-                    radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.05) 0%, transparent 40%);
-  background-attachment: fixed;
-  transition: background 0.4s ease;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
-.container { max-width: 1240px; margin: auto; padding: 40px 24px 80px; }
+.container { max-width: 1200px; margin: auto; padding: 36px 24px 80px; }
 
 /* 🌟 頂部精緻導覽列 */
 .top-bar {
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 24px; flex-wrap: wrap; gap: 16px;
-  background: var(--card); backdrop-filter: blur(16px);
-  border: 1px solid var(--line); border-radius: var(--radius);
-  padding: 20px 32px; box-shadow: var(--shadow);
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 20px 28px; box-shadow: var(--shadow);
 }
-.brand-info h1 { font-size: 20px; margin: 0; font-weight: 800; letter-spacing: -0.5px; }
-.brand-info p { color: var(--mut); margin: 0; font-size: 12.5px; font-weight: 500; }
+.brand-info h1 { font-size: 18px; margin: 0; font-weight: 800; letter-spacing: -0.3px; }
+.brand-info p { color: var(--mut); margin: 0; font-size: 12px; font-weight: 500; }
 
-.theme-select-wrapper { display: flex; align-items: center; gap: 10px; }
-.theme-select-wrapper span { font-size: 12.5px; font-weight: 700; color: var(--mut); }
+.theme-select-wrapper { display: flex; align-items: center; gap: 8px; }
+.theme-select-wrapper span { font-size: 12px; font-weight: 700; color: var(--mut); }
 select.theme-dropdown {
-  background: var(--card); border: 1px solid var(--line); color: var(--ink);
-  padding: 10px 18px; border-radius: 12px; font-family: inherit; font-size: 13px; font-weight: 700;
-  cursor: pointer; outline: none; transition: 0.2s; backdrop-filter: blur(10px);
+  background: var(--bg); border: 1px solid var(--line); color: var(--ink);
+  padding: 8px 14px; border-radius: 10px; font-family: inherit; font-size: 12px; font-weight: 700;
+  cursor: pointer; outline: none; transition: 0.2s;
 }
 select.theme-dropdown:hover { border-color: var(--accent); }
 
 /* 🌟 英雄大橫幅 */
 .hero-banner {
-  background: var(--card); backdrop-filter: blur(16px);
-  border: 1px solid var(--line); border-radius: var(--radius);
-  padding: 36px 40px; margin-bottom: 24px; box-shadow: var(--shadow);
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 32px 36px; margin-bottom: 24px; box-shadow: var(--shadow);
   display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;
-  position: relative; overflow: hidden;
 }
-.hero-banner::before {
-  content: ''; position: absolute; top: 0; left: 0; width: 6px; height: 100%; background: var(--accent);
-}
-.hero-banner h2 { font-size: clamp(24px, 3.5vw, 34px); margin: 0 0 6px; font-weight: 900; letter-spacing: -0.5px; }
-.hero-banner p { color: var(--mut); margin: 0; font-size: 14px; font-weight: 500; }
+.hero-banner h2 { font-size: clamp(22px, 3vw, 30px); margin: 0 0 4px; font-weight: 800; letter-spacing: -0.5px; }
+.hero-banner p { color: var(--mut); margin: 0; font-size: 13.5px; font-weight: 500; }
 
 /* 🌟 圓角現代分頁按鈕群 */
 .nav-tabs {
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px;
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 24px;
 }
 @media(max-width: 768px) { .nav-tabs { grid-template-columns: repeat(3, 1fr); } }
 .nav-tabs button {
-  background: var(--card); backdrop-filter: blur(12px);
-  border: 1px solid var(--line); color: var(--mut);
-  padding: 16px 12px; border-radius: 14px; font-family: inherit; font-weight: 700; font-size: 14px;
-  cursor: pointer; transition: 0.25s; text-align: center; box-shadow: var(--shadow);
+  background: var(--card); border: 1px solid var(--line); color: var(--mut);
+  padding: 14px 10px; border-radius: 12px; font-family: inherit; font-weight: 700; font-size: 13.5px;
+  cursor: pointer; transition: 0.2s; text-align: center; box-shadow: var(--shadow);
 }
-.nav-tabs button:hover { border-color: var(--accent); color: var(--ink); transform: translateY(-2px); }
+.nav-tabs button:hover { border-color: var(--accent); color: var(--ink); }
 .nav-tabs button.on {
   background: var(--accent); color: var(--bg); border-color: var(--accent);
-  box-shadow: 0 0 25px var(--accent-glow); font-weight: 800; transform: translateY(-2px);
+  box-shadow: 0 0 20px var(--accent-glow); font-weight: 800;
 }
 
 /* 🌟 4 大指標卡片 */
 .grid-stats {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px;
 }
 @media(max-width: 900px) { .grid-stats { grid-template-columns: 1fr 1fr; } }
 @media(max-width: 480px) { .grid-stats { grid-template-columns: 1fr; } }
 
 .stat-card {
-  background: var(--card); backdrop-filter: blur(16px);
-  border: 1px solid var(--line); border-radius: var(--radius);
-  padding: 24px; box-shadow: var(--shadow); transition: 0.25s;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 20px 24px; box-shadow: var(--shadow); transition: 0.2s;
 }
-.stat-card:hover { border-color: var(--accent); transform: translateY(-3px); }
-.stat-label { color: var(--mut); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
-.stat-value { font-size: 32px; font-weight: 900; margin: 10px 0 4px; letter-spacing: -1px; }
-.stat-desc { color: var(--mut); font-size: 13px; font-weight: 600; }
+.stat-card:hover { border-color: var(--accent); }
+.stat-label { color: var(--mut); font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+.stat-value { font-size: 28px; font-weight: 800; margin: 8px 0 2px; letter-spacing: -0.5px; }
+.stat-desc { color: var(--mut); font-size: 12px; font-weight: 600; }
 
 /* 主內容面板 */
 .main-pane {
-  background: var(--card); backdrop-filter: blur(16px);
-  border: 1px solid var(--line); border-radius: var(--radius);
-  padding: 36px; box-shadow: var(--shadow); margin-bottom: 24px;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 32px; box-shadow: var(--shadow); margin-bottom: 24px;
 }
-.main-pane h2 { font-size: 22px; margin-top: 0; font-weight: 800; letter-spacing: -0.5px; }
+.main-pane h2 { font-size: 20px; margin-top: 0; font-weight: 800; letter-spacing: -0.3px; }
 
-.g { display: grid; gap: 16px; }
+.g { display: grid; gap: 14px; }
 .g2 { grid-template-columns: 1fr 1fr; }
 @media(max-width: 768px) { .g2 { grid-template-columns: 1fr; } }
 
 .c {
-  background: rgba(255, 255, 255, 0.02); border: 1px solid var(--line); border-radius: 16px; padding: 22px;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 20px;
 }
 .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.in { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); font-weight: 600; }
+.in { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); font-weight: 600; }
 .in:last-child { border: 0; }
 
 input[type=number], input[type=text], textarea {
-  background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-  padding: 10px 14px; color: var(--accent); font-family: inherit; font-weight: 700; width: 110px; text-align: right; outline: none;
+  background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+  padding: 8px 12px; color: var(--accent); font-family: inherit; font-weight: 700; width: 100px; text-align: right; outline: none;
 }
-textarea { width: 100%; text-align: left; color: var(--ink); font-weight: 400; min-height: 130px; resize: vertical; }
+textarea { width: 100%; text-align: left; color: var(--ink); font-weight: 400; min-height: 120px; resize: vertical; }
 
-.seg { display: flex; background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 4px; border: 1px solid var(--line); margin: 12px 0; }
-.seg button { flex: 1; border: 0; background: none; color: var(--mut); font: inherit; font-weight: 700; padding: 10px 0; border-radius: 8px; cursor: pointer; transition: 0.2s; }
-.seg button.on { background: var(--accent); color: var(--bg); box-shadow: 0 0 15px var(--accent-glow); font-weight: 900; }
+.seg { display: flex; background: var(--card); border-radius: 10px; padding: 3px; border: 1px solid var(--line); margin: 10px 0; }
+.seg button { flex: 1; border: 0; background: none; color: var(--mut); font: inherit; font-weight: 700; font-size: 13px; padding: 8px 0; border-radius: 7px; cursor: pointer; transition: 0.2s; }
+.seg button.on { background: var(--accent); color: var(--bg); font-weight: 800; box-shadow: 0 0 10px var(--accent-glow); }
 
-.pill { display: inline-block; border-radius: 99px; padding: 5px 12px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+.pill { display: inline-block; border-radius: 99px; padding: 4px 10px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
 .lo { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
 .mi { background: rgba(234, 179, 8, 0.15); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.3); }
 .hi { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
 .gy { background: var(--card); color: var(--mut); border: 1px solid var(--line); }
 
 .btn {
-  background: var(--accent); color: var(--bg); border: 0; padding: 14px 28px;
+  background: var(--accent); color: var(--bg); border: 0; padding: 12px 24px;
   border-radius: 99px; font-family: inherit; font-weight: 800; cursor: pointer;
-  box-shadow: 0 4px 20px var(--accent-glow); transition: 0.2s;
+  box-shadow: 0 4px 15px var(--accent-glow); transition: 0.2s;
 }
-.btn:hover { opacity: 0.95; transform: translateY(-2px); box-shadow: 0 6px 25px var(--accent-glow); }
+.btn:hover { opacity: 0.95; transform: translateY(-1px); }
 
-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-th, td { text-align: right; padding: 16px 12px; border-bottom: 1px solid var(--line); font-weight: 600; }
+table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+th, td { text-align: right; padding: 14px 10px; border-bottom: 1px solid var(--line); font-weight: 600; }
 th:first-child, td:first-child { text-align: left; }
-th { color: var(--mut); font-size: 12px; text-transform: uppercase; font-weight: 800; }
-tr.hl td { background: rgba(255, 255, 255, 0.03); color: var(--accent); font-weight: 800; }
+th { color: var(--mut); font-size: 11.5px; text-transform: uppercase; font-weight: 800; }
+tr.hl td { background: var(--card); color: var(--accent); font-weight: 800; }
 .tw { overflow-x: auto; }
 </style>
 </head>
@@ -180,7 +186,7 @@ tr.hl td { background: rgba(255, 255, 255, 0.03); color: var(--accent); font-wei
       <h2>AIDC 生態保費試算系統</h2>
       <p>把生態風險，變成看得懂的保費（Flask 安全後端版）</p>
     </div>
-    <div style="font-size:12px; color:var(--accent); background:rgba(255,255,255,0.05); border:1px solid var(--line); padding:8px 18px; border-radius:99px; font-weight:700; backdrop-filter: blur(10px);">
+    <div style="font-size:11.5px; color:var(--accent); background:var(--bg); border:1px solid var(--line); padding:6px 14px; border-radius:99px; font-weight:700;">
       🔒 後端 AI 代理通道運行中
     </div>
   </div>
@@ -189,7 +195,7 @@ tr.hl td { background: rgba(255, 255, 255, 0.03); color: var(--accent); font-wei
   <div class="grid-stats" id="sum"></div>
   <div class="main-pane" id="pane"></div>
 
-  <div style="display: flex; justify-content: center; gap: 16px; margin-top: 30px;">
+  <div style="display: flex; justify-content: center; gap: 12px; margin-top: 24px;">
     <button class="btn" style="background:var(--card); color:var(--ink); border:1px solid var(--line); box-shadow:none;" id="expJ">匯出 JSON</button>
     <button class="btn" style="background:var(--card); color:var(--ink); border:1px solid var(--line); box-shadow:none;" id="expC">匯出 CSV</button>
   </div>
@@ -230,10 +236,10 @@ const wan=n=>f(n,1)+' 萬';
 function summary(){
   const b=prem('b'),a=prem('a'),cl=claim(S.ins);
   $('#sum').innerHTML=`
-    <div class="stat-card"><div class="stat-label"><span style="width:8px;height:8px;border-radius:50%;background:#f97316;display:inline-block"></span>施工前生態 S</div><div class="stat-value">${f(b.s)}</div><div class="stat-desc">${b.lv}風險</div></div>
-    <div class="stat-card"><div class="stat-label"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block"></span>施工後生態 S</div><div class="stat-value">${f(a.s)}</div><div class="stat-desc">${a.lv}風險</div></div>
+    <div class="stat-card"><div class="stat-label"><span style="width:6px;height:6px;border-radius:50%;background:#f97316;display:inline-block"></span>施工前生態 S</div><div class="stat-value">${f(b.s)}</div><div class="stat-desc">${b.lv}風險</div></div>
+    <div class="stat-card"><div class="stat-label"><span style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block"></span>施工後生態 S</div><div class="stat-value">${f(a.s)}</div><div class="stat-desc">${a.lv}風險</div></div>
     <div class="stat-card"><div class="stat-label">施工後年保費</div><div class="stat-value">${wan(a.p)}</div><div class="stat-desc">較前省 ${f(b.p-a.p,1)} 萬</div></div>
-    <div class="stat-card"><div class="stat-label"><span style="width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block"></span>資金缺口 G</div><div class="stat-value">${wan(cl.G)}</div><div class="stat-desc">${cl.G>0?'資金不足':'無缺口'}</div></div>
+    <div class="stat-card"><div class="stat-label"><span style="width:6px;height:6px;border-radius:50%;background:#ef4444;display:inline-block"></span>資金缺口 G</div><div class="stat-value">${wan(cl.G)}</div><div class="stat-desc">${cl.G>0?'資金不足':'無缺口'}</div></div>
   `;
 }
 
@@ -247,12 +253,12 @@ function seg(st,k){
 
 function pAssess(){
   const b=prem('b'),a=prem('a');
-  let h=`<h2>六大指標動態評估</h2><p style="color:var(--mut);margin-bottom:20px;">依 TNFD LEAP 架構評估。點選 1–5 分調整指標。</p><div class="g g2">`;
+  let h=`<h2>六大指標動態評估</h2><p style="color:var(--mut);margin-bottom:16px;font-size:13.5px;">依 TNFD LEAP 架構評估。點選 1–5 分調整指標。</p><div class="g g2">`;
   IND.forEach(x=>{
     h+=`<div class="c">
-      <div class="row"><b style="font-size:15px;">${x.i} ${x.n}</b><span class="pill gy">權重 ${x.w}%</span></div>
-      <div style="margin-top:14px; font-size:13px; color:var(--mut)">施工前評分：${S.sc.b[x.k]} 分</div>${seg('b',x.k)}
-      <div style="margin-top:14px; font-size:13px; color:var(--mut)">施工後評分：${S.sc.a[x.k]} 分</div>${seg('a',x.k)}
+      <div class="row"><b style="font-size:14px;">${x.i} ${x.n}</b><span class="pill gy">權重 ${x.w}%</span></div>
+      <div style="margin-top:12px; font-size:12px; color:var(--mut)">施工前評分：${S.sc.b[x.k]} 分</div>${seg('b',x.k)}
+      <div style="margin-top:12px; font-size:12px; color:var(--mut)">施工後評分：${S.sc.a[x.k]} 分</div>${seg('a',x.k)}
     </div>`;
   });
   return h+`</div>`;
@@ -273,7 +279,7 @@ function pPrem(){
       <div class="in">基準費率（%）${num(S,'rate')}</div>
     </div>
   </div>
-  <div class="c tw" style="margin-top:20px">
+  <div class="c tw" style="margin-top:16px">
     <table><tr><th>情境方案</th><th>S / 社 / 治</th><th>Q 值</th><th>倍數</th><th>預估年保費</th></tr>
     ${rows.map((r,i)=>`<tr class="${i==1?'hl':''}"><td>${r[0]}</td><td>${f(r[1])}/${r[2]}/${r[3]}</td><td>${f(r[4])}</td><td>${f(r[5],1)}</td><td>${wan(r[6])}</td></tr>`).join('')}
     </table>
@@ -307,7 +313,7 @@ function pAudit2(){
   return `<h2>AI 智慧查核與決策輔助</h2><div class="c"><p style="color:var(--mut)">串接後端 AI 通道，提供日誌智能解析與 TNFD 風險揭露草擬。</p></div>`;
 }
 
-function num(o,k,min=0,max=1e9){return `<input type="number" value="${o[k]}" min="${min}" max="${max}" step="any" data-o="${e=>e}" data-k="${k}">`}
+function num(o,k,min=0,max=1e9){return `<input type="number" value="${o[k]}" min="${min}" max="${max}" step="any" data-o="S" data-k="${k}">`}
 
 function draw(){
   tabs();
