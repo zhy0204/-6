@@ -372,7 +372,9 @@ $('#expJ').onclick=()=>dl(JSON.stringify({state:S},null,2),'aidc.json','applicat
 $('#expC').onclick=()=>dl('階段,S,Q\n施工前,'+f(prem('b').s)+'\n施工後,'+f(prem('a').s),'aidc.csv','text/csv;charset=utf-8');
 $('#tgl').onclick=()=>{const r=document.documentElement,d=r.dataset.theme==='dark';r.dataset.theme=d?'':'dark';};
 
-draw(); setDemo();
+// 🌟 確保畫面載入時正常渲染
+draw(); 
+setDemo();
 </script>
 </body>
 </html>
