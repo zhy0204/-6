@@ -350,6 +350,7 @@ function tnfdRun(){return ai('tnfd',async()=>{
   S.tnfd=await callGemini('依 TNFD LEAP 架構草擬自然風險揭露報告，150字。',[],false);
 })}
 
+// 獨立的第 5 個分頁渲染函式：AI 智慧查核（包含遙測影像交叉比對）
 function pAudit2(){
   const sr=search(S.path),cur=S.sc[S.path],bs=k=>S.busy===k;
   const chip=(t,tx)=>`<button class="btn" style="padding:6px 14px;font-size:12px;${S.path===t?'':'background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;'}" onclick="S.path='${t}';draw()">${tx}</button>`;
@@ -402,8 +403,10 @@ function pAudit2(){
 
 function draw(){
   tabs(); summary();
+  // 嚴格對應 5 個分頁函式：索引 0->pAssess, 1->pPrem, 2->pClaim, 3->pRest, 4->pAudit2
   const pages = [pAssess, pPrem, pClaim, pRest, pAudit2];
-  $('#pane').innerHTML = (pages[S.tab] || pAssess)();
+  const renderFn = pages[S.tab] || pAssess;
+  $('#pane').innerHTML = renderFn();
   
   document.querySelectorAll('#pane input').forEach(e=>e.addEventListener('change',()=>{
     const o={ins:S.ins,rs:S.rs,soc:S.soc,gov:S.gov,S:S}[e.dataset.o];
