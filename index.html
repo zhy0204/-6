@@ -267,15 +267,32 @@ function search(st){
   return{m0,q0,res:out.filter(o=>o.ch===mn).sort((a,b)=>a.m-b.m||a.s-b.s).slice(0,3)}
 }
 
+// 🌐 強化版 callGemini：加入逾時偵測與更清楚的錯誤攔截
 async function callGemini(prompt, imageBase64List = [], jsonMode = false) {
-  const response = await fetch('https://ai-backend-hkff.onrender.com/api/gemini', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt: prompt, images: imageBase64List, json_mode: jsonMode })
-  });
-  const result = await response.json();
-  if (!response.ok || !result.success) throw new Error(result.error || '後端 API 請求失敗');
-  return result.data;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000); // 設為 60 秒逾時（應對 Render 喚醒時間）
+
+  try {
+    const response = await fetch('https://ai-backend-hkff.onrender.com/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: prompt, images: imageBase64List, json_mode: jsonMode }),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || `後端回傳錯誤代碼 (${response.status})`);
+    }
+    return result.data;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new Error('伺服器連線逾時（Render 後端可能正在從休眠中喚醒，請再試一次）');
+    }
+    throw err;
+  }
 }
 
 const rub=IND.map(x=>x.k+' '+x.n+'：'+x.L.map((l,i)=>(i+1)+'='+l).join('；')).join('\n');
@@ -283,7 +300,12 @@ const nz=t=>String(t||'').replace(/\s+/g,'');
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&','<':'<','>':'>','"':'"'}[c]));
 const DOC0='2026/03/02 施工日誌：基地鄰接既有溪流，已設置 30 公尺緩衝帶。累計清除植被約 12%。\n2026/03/09 設置透水鋪面與滯洪池。';
 
-async function ai(key,fn){ S.busy=key; S.err=''; draw(); try{ await fn(); } catch(e){ S.err='錯誤：'+(e.message||e); } S.busy=''; draw(); }
+async function ai(key,fn){ 
+  S.busy=key; S.err=''; draw(); 
+  try{ await fn(); } 
+  catch(e){ S.err='AI 請求失敗：'+(e.message || e); } 
+  S.busy=''; draw(); 
+}
 
 function docRun(){return ai('doc',async()=>{
   if(!S.doc.trim())throw{message:'請先貼上文件內容'};
@@ -325,13 +347,13 @@ function pAudit2(){
   const dchip=(t,tx)=>`<button class="btn" style="padding:6px 12px;font-size:12px;${S.docStage===t?'':'background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;'}" onclick="S.docStage='${t}';draw()">${tx}</button>`;
   return `<div class="c"><h2>AI 智慧查核與決策輔助</h2>
   <div class="ai" style="margin-top:16px;">Secure Cloud AI 後端代理通道運行中</div>
-  ${S.err?`<div class="err">${esc(S.err)}</div>`:''}
+  ${S.err?`<div class="err" style="background:#fee2e2;padding:10px 14px;border-radius:8px;margin:12px 0;">${esc(S.err)}</div>`:''}
   
   <div class="c" style="margin-top:16px;">
     <div class="row"><b style="font-size:15px;">① 佐證文件智慧判讀</b><span class="tag">Gemini AI</span></div>
     <div style="margin:12px 0;display:flex;gap:8px;flex-wrap:wrap;">${dchip('b','套用到施工前')}${dchip('a','套用到施工後')}<button class="btn" style="padding:6px 12px;font-size:12px;background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;" onclick="S.doc=DOC0;S.docRes=null;draw()">載入示範日誌</button></div>
     <textarea placeholder="在此貼上施工日誌…" oninput="S.doc=this.value">${esc(S.doc)}</textarea>
-    <div style="margin-top:12px"><button class="btn" onclick="docRun()">${bs('doc')?'判讀中…':'開始 AI 判讀'}</button></div>
+    <div style="margin-top:12px"><button class="btn" onclick="docRun()">${bs('doc')?'AI 判讀中（若伺服器休眠請稍候）…':'開始 AI 判讀'}</button></div>
     ${(S.docRes||[]).map((it,i)=>`<div class="ev"><b>${it.k}：建議 ${it.score} 分</b><br><blockquote>「${esc(it.quote)}」</blockquote>${it.ok?(it.done?'已採用':`<button class="btn" style="padding:4px 10px;font-size:11px;" onclick="adopt(${i})">採用</button>`):''}</div>`).join('')}
   </div>
   
