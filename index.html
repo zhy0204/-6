@@ -162,9 +162,9 @@ const k=ks[i];for(let v=1;v<=cur[k];v++){sc[k]=v;rec(i+1,sc,ch+(v<cur[k]?1:0))}s
 out.sort((a,b)=>a.ch-b.ch||b.m-a.m||a.s-b.s);const mn=out.length?out[0].ch:0;
 return{m0,q0,res:out.filter(o=>o.ch===mn).sort((a,b)=>a.m-b.m||a.s-b.s).slice(0,3)}}
 
-// --- 已正確串接 Render 雲端後端的 API 呼叫函數 ---
+// --- 已將 API 路由正確指向 Vercel 後端代理 ---
 async function callGemini(prompt, imageBase64List = [], jsonMode = false) {
-  const response = await fetch('https://ai-backend-hkff.onrender.com/api/gemini', {
+  const response = await fetch('/api/gemini', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
