@@ -190,7 +190,7 @@ function radar(){const cx=150,cy=140,R=95,n=6,pt=(i,v)=>{const a=-Math.PI/2+i*2*
 const poly=st=>IND.map((x,i)=>pt(i,S.sc[st][x.k]/5).join(',')).join(' ');
 let g=[.2,.4,.6,.8,1].map(v=>`<polygon points="${IND.map((_,i)=>pt(i,v).join(' ')).join(' ')}" fill="none" stroke="var(--line)"/>`).join('');
 g+=IND.map((x,i)=>{const[a,b]=pt(i,1.22);return`<text x="${a}" y="${b+4}" text-anchor="middle" fill="var(--mut)" font-size="12" font-weight="600">${x.r}</text>`}).join('');
-return`<svg viewBox="0 0 300 280" width="100%">${g}<polygon points="${poly('b')" fill="rgba(249, 115, 22, 0.15)" stroke="#f97316" stroke-width="2.5"/><polygon points="${poly('a')" fill="rgba(2, 132, 199, 0.15)" stroke="#0284c7" stroke-width="2.5"/></svg>`}
+return`<svg viewBox="0 0 300 280" width="100%">${g}<polygon points="${poly('b')}" fill="rgba(249, 115, 22, 0.15)" stroke="#f97316" stroke-width="2.5"/><polygon points="${poly('a')}" fill="rgba(2, 132, 199, 0.15)" stroke="#0284c7" stroke-width="2.5"/></svg>`}
 
 function ringSvg(p,col){const r=40,c=2*Math.PI*r,v=Math.min(Math.max(p,0),100)/100;return`<svg class="ring" viewBox="0 0 96 96" style="width:68px;height:68px;"><circle cx="48" cy="48" r="${r}" fill="none" stroke="var(--line)" stroke-width="10"/><circle cx="48" cy="48" r="${r}" fill="none" stroke="${col}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${c*v} ${c}" transform="rotate(-90 48 48)"/></svg>`}
 const light=(v,g,y)=>v>=g?['綠燈','#22c55e','lo']:v>=y?['黃燈','#f59e0b','mi']:['紅燈','#ef4444','hi'];
@@ -320,7 +320,7 @@ function pAudit2(){
     <div style="margin:14px 0;display:flex;gap:8px;flex-wrap:wrap;">${dchip('b','套用到施工前')}${dchip('a','套用到施工後')}<button class="btn" style="padding:6px 14px;font-size:12px;background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;" onclick="S.doc=DOC0;S.docRes=null;draw()">載入示範日誌</button></div>
     <textarea placeholder="在此貼上施工日誌…" oninput="S.doc=this.value">${esc(S.doc)}</textarea>
     <div style="margin-top:12px"><button class="btn go" onclick="docRun()">${bs('doc')?'判讀中…':'開始 AI 判讀'}</button></div>
-    ${(S.docRes||[]).map((it,i)=>`<div class="ev"><b>${it.k}：建議 ${it.score} 分</b><br><blockquote>「${esc(it.quote)}」</blockquote>${it.ok?(it.done?'已採用':`<button class="btn go" style="padding:6px 14px;font-size:12px;" onclick="adopt(${i})">採用</button>`):''}</div>`).join('')}
+    ${(S.docRes||[]).map((it,i)=>`<div class="ev"><b>${it.k}：建議 ${it.score} 分</b><br><blockquote>“${esc(it.quote)}”</blockquote>${it.ok?(it.done?'已採用':`<button class="btn go" style="padding:6px 14px;font-size:12px;" onclick="adopt(${i})">採用</button>`):''}</div>`).join('')}
   </div>
   
   <div class="c" style="margin-top:20px">
