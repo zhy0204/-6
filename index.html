@@ -141,7 +141,7 @@ blockquote { margin: 10px 0; padding: 10px 14px; border-left: 3px solid var(--ac
   <div class="header-bar">
     <div>
       <h1>AIDC 生態保費試算系統</h1>
-      <p>把生態風險，變成看得懂的保費（Flask 安全後端版）</p>
+      <p>把生態風險，變成看得懂的保費（完整分頁版）</p>
     </div>
     <div style="display:flex; gap:10px;">
       <button class="btn" style="background:var(--bg); color:var(--ink); border:1px solid var(--line); box-shadow:none;" id="expJ">匯出 JSON</button>
@@ -390,13 +390,13 @@ function pAudit2(){
     <div class="row"><b>③ 最佳保費改善路徑試算</b><span class="tag">AI 策略</span></div>
     <div style="margin:14px 0;display:flex;gap:8px;">${chip('b','施工前')}${chip('a','施工後')}</div>
     ${sr.res.map((r,i)=>`<div class="path"><b>#${i+1}</b>${IND.filter(x=>r.sc[x.k]!==cur[x.k]).map(x=>`<span class="t">${x.n} ${cur[x.k]}→${r.sc[x.k]}</span>`).join('')}<b class="r">${f(r.m,1)}×<div class="k">年保費 ${f(S.L*S.rate/100*r.m,1)}萬</div></b></div>`).join('')}
-    <div style="margin-top:12px"><button class="btn go" style="padding:10px 18px;font-size:13px;" onclick="planRun()">生成白話建議</button></div>
+    <div style="margin-top:12px"><button class="btn go" style="padding:10px 18px;font-size:13.5px;" onclick="planRun()">生成白話建議</button></div>
     ${S.plain?`<div class="ev" style="margin-top:12px">${esc(S.plain)}</div>`:''}
   </div>
 
   <div class="c" style="margin-top:20px">
     <div class="row"><b>④ TNFD 自然風險揭露草稿</b><span class="tag">AI 生成</span></div>
-    <div style="margin-top:14px"><button class="btn go" style="padding:10px 18px;font-size:13px;" onclick="tnfdRun()">生成揭露報告</button></div>
+    <div style="margin-top:14px"><button class="btn go" style="padding:10px 18px;font-size:13.5px;" onclick="tnfdRun()">生成揭露報告</button></div>
     ${S.tnfd?`<textarea style="margin-top:12px">${esc(S.tnfd)}</textarea>`:''}
   </div>`;
 }
@@ -405,7 +405,6 @@ function num(o,k,min=0,max=1e9){return`<input type="number" value="${o[k]}" min=
 
 function draw(){
   tabs(); summary();
-  // 核心修復：這裏把 pAudit2 正確對應進 5 個分頁陣列中
   $('#pane').innerHTML=[pAssess,pPrem,pClaim,pRest,pAudit2][S.tab]();
   document.querySelectorAll('#pane input').forEach(e=>e.addEventListener('change',()=>{
     const o={ins:S.ins,rs:S.rs,soc:S.soc,gov:S.gov,S:S}[e.dataset.o];
