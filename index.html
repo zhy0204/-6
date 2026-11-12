@@ -2,71 +2,161 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>AIDC 生態保費試算 (Flask 安全後端版)</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
-body { font-family: 'Noto Sans TC', sans-serif; background: #f4f6f8; color: #333; margin: 0; padding: 20px; }
-.w { max-width: 1000px; margin: auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-h1 { color: #1e293b; font-size: 24px; margin-top: 0; }
-.tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; flex-wrap: wrap; }
-.tabs button { background: #e2e8f0; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 14px; color: #475569; transition: 0.2s; }
-.tabs button.on { background: #0284c7; color: white; }
-.g { display: grid; gap: 15px; }
+:root {
+  --bg: #f4f6f8;
+  --card: #ffffff;
+  --card-hover: #f8fafc;
+  --ink: #0f172a;
+  --mut: #64748b;
+  --line: #e2e8f0;
+  --accent: #0284c7;
+  --accent-glow: rgba(2, 132, 199, 0.1);
+  --shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+:root[data-theme="dark"] {
+  --bg: #090b10;
+  --card: #121722;
+  --card-hover: #1a2233;
+  --ink: #f8fafc;
+  --mut: #8a99ad;
+  --line: rgba(255, 255, 255, 0.08);
+  --accent: #38bdf8;
+  --accent-glow: rgba(56, 189, 248, 0.2);
+  --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: 'Plus Jakarta Sans', 'Noto Sans TC', sans-serif;
+  font-size: 14px; line-height: 1.6; padding: 24px 16px 60px;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+.w { max-width: 1040px; margin: auto; }
+.header-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 24px; flex-wrap: wrap; gap: 16px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 20px;
+  padding: 24px 32px; box-shadow: var(--shadow);
+}
+.header-bar h1 { font-size: 22px; margin: 0 0 4px; font-weight: 800; letter-spacing: -0.5px; }
+.header-bar p { color: var(--mut); margin: 0; font-size: 13.5px; }
+
+/* 上方橫向頁籤 */
+.tabs {
+  display: flex; gap: 4px; background: var(--card); border-radius: 99px; padding: 6px;
+  width: max-width; max-width: 100%; margin: 0 auto 24px; overflow-x: auto;
+  border: 1px solid var(--line); box-shadow: var(--shadow);
+}
+.tabs button {
+  border: 0; background: none; color: var(--mut); padding: 10px 22px;
+  border-radius: 99px; font: inherit; font-weight: 700; cursor: pointer; white-space: nowrap; transition: 0.2s;
+}
+.tabs button:hover { color: var(--ink); }
+.tabs button.on { background: var(--accent); color: #fff; box-shadow: 0 4px 15px var(--accent-glow); }
+
+.g { display: grid; gap: 14px; }
 .g4 { grid-template-columns: repeat(4, 1fr); }
 .g2 { grid-template-columns: repeat(2, 1fr); }
 @media(max-width: 768px) { .g4, .g2 { grid-template-columns: 1fr; } }
-.c { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; }
-.k { font-size: 13px; color: #64748b; font-weight: 600; }
-.big { font-size: 24px; font-weight: 700; color: #0f172a; margin-top: 5px; }
-.btn { background: #0284c7; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 700; }
-.btn:hover { background: #0369a1; }
-.in { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
-input[type=number], input[type=text], textarea { border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 10px; width: 100px; text-align: right; font-size: 14px; }
-textarea { width: 100%; text-align: left; min-height: 100px; }
-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-th, td { padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: right; font-size: 14px; }
+
+.c {
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  padding: 24px; box-shadow: var(--shadow); margin-bottom: 16px;
+}
+.c h2 { font-size: 20px; margin-top: 0; font-weight: 800; }
+
+.k { color: var(--mut); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.big { font-size: 28px; font-weight: 800; margin: 6px 0 2px; letter-spacing: -0.5px; }
+
+.row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.in { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); font-weight: 600; }
+.in:last-child { border: 0; }
+
+input[type=number], input[type=text], textarea {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  padding: 8px 12px; color: var(--accent); font-family: inherit; font-weight: 700; width: 100px; text-align: right; outline: none;
+}
+textarea { width: 100%; text-align: left; color: var(--ink); font-weight: 400; min-height: 120px; resize: vertical; }
+
+.seg { display: flex; background: var(--bg); border-radius: 8px; padding: 3px; border: 1px solid var(--line); margin: 10px 0; }
+.seg button { flex: 1; border: 0; background: none; color: var(--mut); font: inherit; font-weight: 700; font-size: 13px; padding: 8px 0; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+.seg button.on { background: var(--accent); color: #fff; font-weight: 800; box-shadow: 0 0 10px var(--accent-glow); }
+
+.pill { display: inline-block; border-radius: 99px; padding: 4px 10px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+.lo { background: rgba(34, 197, 94, 0.15); color: #16a34a; border: 1px solid rgba(34, 197, 94, 0.3); }
+.mi { background: rgba(234, 179, 8, 0.15); color: #ca8a04; border: 1px solid rgba(234, 179, 8, 0.3); }
+.hi { background: rgba(239, 68, 68, 0.15); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.3); }
+.gy { background: var(--bg); color: var(--mut); border: 1px solid var(--line); }
+
+.btn {
+  background: var(--accent); color: #fff; border: 0; padding: 10px 20px;
+  border-radius: 99px; font-family: inherit; font-weight: 800; cursor: pointer;
+  box-shadow: 0 4px 15px var(--accent-glow); transition: 0.2s;
+}
+.btn:hover { opacity: 0.95; transform: translateY(-1px); }
+
+table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+th, td { text-align: right; padding: 14px 10px; border-bottom: 1px solid var(--line); font-weight: 600; }
 th:first-child, td:first-child { text-align: left; }
-th { color: #64748b; font-weight: 700; }
-tr.hl td { background: #e0f2fe; color: #0369a1; font-weight: 700; }
-.pill { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 12px; font-weight: 700; }
-.lo { background: #dcfce7; color: #166534; }
-.mi { background: #fef9c3; color: #854d0e; }
-.hi { background: #fee2e2; color: #991b1b; }
-.seg { display: flex; gap: 4px; margin: 8px 0; }
-.seg button { flex: 1; background: #e2e8f0; border: none; padding: 6px; border-radius: 4px; cursor: pointer; font-weight: 700; font-size: 13px; }
-.seg button.on { background: #0284c7; color: white; }
-.imgs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.imgs img { width: 100%; border-radius: 6px; border: 1px solid #cbd5e1; }
-.ev { background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px; margin-top: 10px; font-size: 13px; }
-blockquote { margin: 8px 0; padding: 8px 12px; border-left: 3px solid #0284c7; background: #f0f9ff; color: #0369a1; }
-.err { color: #991b1b; font-size: 13px; margin: 8px 0; }
+th { color: var(--mut); font-size: 11.5px; text-transform: uppercase; font-weight: 800; }
+tr.hl td { background: var(--bg); color: var(--accent); font-weight: 800; }
+.tw { overflow-x: auto; }
+.imgs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; }
+.imgs img { width: 100%; border-radius: 8px; border: 1px solid var(--line); display: block; }
+.ev { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 16px; margin: 12px 0; }
+.path { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 14px; margin: 10px 0; }
+.path span.t { background: var(--card); color: var(--accent); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; font-weight: 700; font-size: 12px; }
+.path b.r { margin-left: auto; text-align: right; }
+.tag { background: var(--bg); color: var(--accent); border: 1px solid var(--line); border-radius: 99px; padding: 4px 10px; font-weight: 800; font-size: 11px; }
+.ai { display: flex; gap: 12px; align-items: center; background: var(--bg); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 10px; padding: 14px; margin-bottom: 16px; font-weight: 700; }
+.tgl { position: fixed; right: 20px; bottom: 20px; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 50%; width: 44px; height: 44px; display: grid; place-items: center; box-shadow: var(--shadow); cursor: pointer; font-size: 18px; z-index: 100; }
 </style>
 </head>
 <body>
+
 <div class="w">
-  <h1>AIDC 生態保費試算 (Flask 安全後端版)</h1>
-  <div class="tabs" id="tabs"></div>
-  <div class="g g4" id="sum"></div>
-  <div id="pane" style="margin-top:20px;"></div>
-  <div style="margin-top:30px; display:flex; gap:10px;">
-    <button class="btn" style="background:#475569;" id="expJ">匯出 JSON</button>
-    <button class="btn" style="background:#475569;" id="expC">匯出 CSV</button>
+  <div class="header-bar">
+    <div>
+      <h1>AIDC 生態保費試算系統</h1>
+      <p>把生態風險，變成看得懂的保費（Flask 安全後端版）</p>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="btn" style="background:var(--bg); color:var(--ink); border:1px solid var(--line); box-shadow:none;" id="expJ">匯出 JSON</button>
+      <button class="btn" style="background:var(--bg); color:var(--ink); border:1px solid var(--line); box-shadow:none;" id="expC">匯出 CSV</button>
+    </div>
   </div>
+
+  <!-- 上方分頁按鈕群組 -->
+  <div class="tabs" id="tabs"></div>
+
+  <!-- 頂部四大指標 -->
+  <div class="g g4" id="sum" style="margin-bottom: 24px;"></div>
+
+  <!-- 動態主面板 -->
+  <div id="pane"></div>
 </div>
+
+<button class="tgl" id="tgl" title="切換深淺色">◐</button>
 
 <script>
 const $=s=>document.querySelector(s);
 const IND=[
-{k:'h',n:'棲地敏感性',w:30,L:['人工化基地且未辨識敏感棲地','一般綠地','鄰接自然水域或半自然棲地','影響範圍涉及重要棲地','涉及保護區 or 保育物種重要棲地']},
-{k:'v',n:'植被移除比例',w:25,L:['低於 10%','10% 至未滿 25%','25% 至未滿 50%','50% 至 75%','高於 75%']},
-{k:'r',n:'逕流與透水影響',w:15,L:['透水及逕流控制完善並有紀錄','有控制設施但成效待驗證','局部積水或控制不完整','缺乏必要控制','已記錄泥沙外流或水體受損']},
-{k:'t',n:'冷卻排熱影響',w:15,L:['無直接熱水排放且有紀錄','有降溫並持續監測','排放溫差或影響待確認','有異常升溫紀錄','有升溫及生態損害證據']},
-{k:'m',n:'監測與治理',w:10,L:['定期監測、可追溯並持續改善','定期監測但紀錄不完整','不定期監測','缺乏系統且異常未改善','重大異常未處理或無法追溯']},
-{k:'n',n:'夜間施工干擾',w:5,L:['0%','大於 0% 至 10%','大於 10% 至 30%','大於 30% 至 50%','大於 50%']}];
+{k:'h',n:'棲地敏感性',w:30,c:'#22c55e',i:'🍃',L:['人工化基地且未辨識敏感棲地','一般綠地','鄰接自然水域或半自然棲地','影響範圍涉及重要棲地','涉及保護區 or 保育物種重要棲地'],r:'棲地'},
+{k:'v',n:'植被移除比例',w:25,c:'#10b981',i:'🌳',L:['低於 10%','10% 至未滿 25%','25% 至未滿 50%','50% 至 75%','高於 75%'],r:'植被'},
+{k:'r',n:'逕流與透水影響',w:15,c:'#3b82f6',i:'💧',L:['透水及逕流控制完善並有紀錄','有控制設施但成效待驗證','局部積水或控制不完整','缺乏必要控制','已記錄泥沙外流或水體受損'],r:'逕流'},
+{k:'t',n:'冷卻排熱影響',w:15,c:'#f97316',i:'🌡',L:['無直接熱水排放且有紀錄','有降溫並持續監測','排放溫差或影響待確認','有異常升溫紀錄','有升溫及生態損害證據'],r:'排熱'},
+{k:'m',n:'監測與治理',w:10,c:'#71717a',i:'📈',L:['定期監測、可追溯並持續改善','定期監測但紀錄不完整','不定期監測','缺乏系統且異常未改善','重大異常未處理或無法追溯'],r:'監測'},
+{k:'n',n:'夜間施工干擾',w:5,L:['0%','大於 0% 至 10%','大於 10% 至 30%','大於 30% 至 50%','大於 50%'],r:'夜間'}];
+
 const CL=[['損失超過上限',300,250,30,200,80],['損失低於自負額',40,25,30,200,80],['部分保障、自留足夠',150,120,30,200,80]];
 const S={tab:0,sc:{b:{h:3,v:3,r:3,t:3,m:2,n:3},a:{h:2,v:2,r:3,t:2,m:1,n:2}},soc:{b:70,a:85},gov:{b:70,a:90},L:200,rate:1,cl:0,
-ins:{C:300,E:250,D:30,L:200,R:80},rs:{ad:4200,ap:5000,al:452,pl:500,md:11,mp:12},path:'b',doc:'',docStage:'a',docRes:null,log:[],img:{b:null,a:null},roi:{x:0,y:0,w:100,h:100},demoN:0,isDemo:true,imgRes:null,plain:'',tnfd:'',busy:'',err:''};
+ins:{C:300,E:250,D:30,L:200,R:80},rs:{ad:4200,ap:5000,al:452,pl:500,md:11,mp:12},path:'b',doc:'',docStage:'a',docRes:null,log:[],img:{b:null,a:null},imgDates:{b:'',a:''},roi:{x:0,y:0,w:100,h:100},demoN:0,isDemo:true,imgRes:null,plain:'',tnfd:'',busy:'',err:''};
 
 const f=(n,d=2)=>Number(n).toFixed(d);
 const calcS=sc=>100*IND.reduce((s,x)=>s+x.w/100*(sc[x.k]-1)/4,0);
@@ -75,50 +165,93 @@ const mult=(q,hi)=>hi?1.6:q>=80?1:q>=60?1.3:1.6;
 const Qf=(s,so,go)=>.5*(100-s)+.2*so+.3*go;
 function prem(st){const sc=S.sc[st],s=calcS(sc),hi=lvl(s,sc)==='高',q=Qf(s,S.soc[st],S.gov[st]),m=mult(q,hi);return{s,q,m,p:S.L*S.rate/100*m,hi,lv:lvl(s,sc)}}
 function claim(x){const I=Math.min(Math.max(x.E-x.D,0),x.L),U=x.C-I,G=Math.max(U-x.R,0);return{I,U,G,cov:U?x.R/U*100:100}}
-const pc=l=>l==='低'?'lo':l==='中'?'mi':'hi';
 const wan=n=>f(n,1)+' 萬';
 
 function summary(){
   const b=prem('b'),a=prem('a'),cl=claim(S.ins);
   $('#sum').innerHTML=`
-    <div class="c"><div class="k">施工前生態 S</div><div class="big">${f(b.s)}</div><div class="k">${b.lv}風險</div></div>
-    <div class="c"><div class="k">施工後生態 S</div><div class="big">${f(a.s)}</div><div class="k">${a.lv}風險</div></div>
-    <div class="c"><div class="k">施工後年保費</div><div class="big">${wan(a.p)}</div><div class="k">較前省 ${f(b.p-a.p,1)} 萬</div></div>
-    <div class="c"><div class="k">資金缺口 G</div><div class="big">${wan(cl.G)}</div><div class="k">${cl.G>0?'資金不足':'無缺口'}</div></div>
+    <div class="c" style="margin-bottom:0;"><div class="k">施工前生態 S</div><div class="big">${f(b.s)}</div><div class="k" style="margin-top:4px">${b.lv}風險</div></div>
+    <div class="c" style="margin-bottom:0;"><div class="k">施工後生態 S</div><div class="big">${f(a.s)}</div><div class="k" style="margin-top:4px">${a.lv}風險</div></div>
+    <div class="c" style="margin-bottom:0;"><div class="k">施工後年保費</div><div class="big">${wan(a.p)}</div><div class="k" style="margin-top:4px">較前省 ${f(b.p-a.p,1)} 萬</div></div>
+    <div class="c" style="margin-bottom:0;"><div class="k">資金缺口 G</div><div class="big">${wan(cl.G)}</div><div class="k" style="margin-top:4px">${cl.G>0?'資金不足':'無缺口'}</div></div>
   `;
 }
-function tabs(){$('#tabs').innerHTML=['核心評估','保費試算','理賠防護','復育監控','AI 智慧查核'].map((t,i)=>`<button class="${S.tab===i?'on':''}" onclick="S.tab=${i};draw()">${t}</button>`).join('')}
-function seg(st,k){return`<div class="seg">${[1,2,3,4,5].map(v=>`<button class="${S.sc[st][k]===v?'on':''}" onclick="S.sc.${st}.${k}=${v};draw()">${v}</button>`).join('')}</div>`}
+
+function tabs(){
+  $('#tabs').innerHTML=['核心評估','保費試算','理賠防護','復育監控','AI 智慧查核'].map((t,i)=>`<button class="${S.tab===i?'on':''}" onclick="S.tab=${i};draw()">${t}</button>`).join('');
+}
+
+function seg(st,k){
+  return `<div class="seg">${[1,2,3,4,5].map(v=>`<button class="${S.sc[st][k]===v?'on':''}" onclick="S.sc.${st}.${k}=${v};draw()">${v}</button>`).join('')}</div>`;
+}
 
 function pAssess(){
   const b=prem('b'),a=prem('a');
-  let h=`<h2>六大指標動態評估</h2><div class="g g2">`;
+  let h=`<div class="c"><h2>六大指標動態評估</h2><p style="color:var(--mut);margin-bottom:16px;font-size:13.5px;">依 TNFD LEAP 架構評估。點選 1–5 分調整指標。</p><div class="g g2">`;
   IND.forEach(x=>{
-    h+=`<div class="c"><b>${x.n}</b>（權重 ${x.w}%）<div style="margin-top:8px">施工前：${S.sc.b[x.k]} 分</div>${seg('b',x.k)}<div style="margin-top:8px">施工後：${S.sc.a[x.k]} 分</div>${seg('a',x.k)}</div>`;
+    h+=`<div class="c" style="margin-bottom:0;">
+      <div class="row"><b style="font-size:14px;">${x.i} ${x.n}</b><span class="pill gy">權重 ${x.w}%</span></div>
+      <div style="margin-top:12px; font-size:12px; color:var(--mut)">施工前評分：${S.sc.b[x.k]} 分</div>${seg('b',x.k)}
+      <div style="margin-top:12px; font-size:12px; color:var(--mut)">施工後評分：${S.sc.a[x.k]} 分</div>${seg('a',x.k)}
+    </div>`;
   });
-  return h+`</div>`;
+  return h+`</div></div>`;
 }
 
 function pPrem(){
   const b=prem('b'),a=prem('a'),sc3=prem('a');
   const rows=[['改善前',b.s,S.soc.b,S.gov.b,b.q,b.m,b.p],['只改善生態',a.s,S.soc.b,S.gov.b,Qf(a.s,S.soc.b,S.gov.b),mult(Qf(a.s,S.soc.b,S.gov.b),a.hi),S.L*S.rate/100*mult(Qf(a.s,S.soc.b,S.gov.b),a.hi)],['三構面皆改善',a.s,S.soc.a,S.gov.a,sc3.q,sc3.m,sc3.p]];
-  return `<h2>ESG 綜合評分與保費試算</h2><div class="g g2"><div class="c"><div class="in">社會構面（施工前）${num(S.soc,'b',0,100)}</div><div class="in">治理構面（施工前）${num(S.gov,'b',0,100)}</div><div class="in">社會構面（施工後）${num(S.soc,'a',0,100)}</div><div class="in">治理構面（施工後）${num(S.gov,'a',0,100)}</div></div><div class="c"><div class="in">保障上限 L${num(S,'L')}</div><div class="in">基準費率 %${num(S,'rate')}</div></div></div>
-  <div class="c" style="margin-top:15px"><table><tr><th>情境方案</th><th>S / 社 / 治</th><th>Q 值</th><th>倍數</th><th>預估年保費</th></tr>${rows.map((r,i)=>`<tr class="${i==1?'hl':''}"><td>${r[0]}</td><td>${f(r[1])}/${r[2]}/${r[3]}</td><td>${f(r[4])}</td><td>${f(r[5],1)}</td><td>${wan(r[6])}</td></tr>`).join('')}</table></div>`;
+  return `<div class="c"><h2>ESG 綜合評分與保費試算</h2><div class="g g2" style="margin-top:16px;">
+    <div class="c" style="margin-bottom:0;">
+      <div class="in">社會構面設定（施工前）${num(S.soc,'b',0,100)}</div>
+      <div class="in">治理構面設定（施工前）${num(S.gov,'b',0,100)}</div>
+      <div class="in">社會構面設定（施工後）${num(S.soc,'a',0,100)}</div>
+      <div class="in">治理構面設定（施工後）${num(S.gov,'a',0,100)}</div>
+    </div>
+    <div class="c" style="margin-bottom:0;">
+      <div class="in">保障上限 L（萬）${num(S,'L')}</div>
+      <div class="in">基準費率（%）${num(S,'rate')}</div>
+    </div>
+  </div>
+  <div class="c tw" style="margin-top:16px; margin-bottom:0;">
+    <table><tr><th>情境方案</th><th>S / 社 / 治</th><th>Q 值</th><th>倍數</th><th>預估年保費</th></tr>
+    ${rows.map((r,i)=>`<tr class="${i==1?'hl':''}"><td>${r[0]}</td><td>${f(r[1])}/${r[2]}/${r[3]}</td><td>${f(r[4])}</td><td>${f(r[5],1)}</td><td>${wan(r[6])}</td></tr>`).join('')}
+    </table>
+  </div></div>`;
 }
 
 function pClaim(){
   const x=S.ins,r=claim(x),tot=x.C||1;
-  return `<h2>損害發生與保險給付試算</h2><div class="c"><div style="display:flex;gap:6px;margin-bottom:10px">${CL.map((c,i)=>`<button class="btn" style="padding:6px 12px;font-size:12px;${S.cl===i?'':'background:#64748b'}" onclick="setCl(${i})">${c[0]}</button>`).join('')}</div>
-  <div class="g g4"><div class="c"><div class="k">保險給付 I</div><div class="big">${wan(r.I)}</div></div><div class="c"><div class="k">自留支應</div><div class="big">${wan(Math.min(r.U,x.R))}</div></div><div class="c"><div class="k">資金缺口 G</div><div class="big">${wan(r.G)}</div></div></div></div>
-  <div class="g g2" style="margin-top:15px"><div class="c"><div class="in">總復育成本 C${num(x,'C')}</div><div class="in">保險損失 E${num(x,'E')}</div><div class="in">自負額 D${num(x,'D')}</div><div class="in">保障上限 L${num(x,'L')}</div><div class="in">可動用自留 R${num(x,'R')}</div></div><div class="c"><div class="in">保險給付<b>${wan(r.I)}</b></div><div class="in">自留支應<b>${wan(Math.min(r.U,x.R))}</b></div><div class="in">資金缺口<b>${wan(r.G)}</b></div></div></div>`;
+  return `<div class="c"><h2>損害發生與保險給付試算</h2>
+    <div class="row" style="margin:16px 0"><div style="display:flex;gap:6px;flex-wrap:wrap;">${CL.map((c,i)=>`<button class="btn" style="padding:6px 14px;font-size:12px;${S.cl===i?'':'background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;'}" onclick="setCl(${i})">${c[0]}</button>`).join('')}</div></div>
+    <div class="g g4" style="margin-bottom:16px;">
+      <div class="c" style="margin-bottom:0;"><div class="k">保險給付 I</div><div class="big">${wan(r.I)}</div></div>
+      <div class="c" style="margin-bottom:0;"><div class="k">自留支應</div><div class="big">${wan(Math.min(r.U,x.R))}</div></div>
+      <div class="c" style="margin-bottom:0;"><div class="k">資金缺口 G</div><div class="big">${wan(r.G)}</div></div>
+    </div>
+  <div class="g g2">
+    <div class="c" style="margin-bottom:0;">
+      <div class="in">總復育成本 C${num(x,'C')}</div>
+      <div class="in">保險範圍損失 E${num(x,'E')}</div>
+      <div class="in">自負額 D${num(x,'D')}</div>
+      <div class="in">保障上限 L${num(x,'L')}</div>
+      <div class="in">可動用自留 R${num(x,'R')}</div>
+    </div>
+    <div class="c" style="margin-bottom:0;">
+      <div class="in">保險給付 I<b>${wan(r.I)}</b></div>
+      <div class="in">自留支應<b>${wan(Math.min(r.U,x.R))}</b></div>
+      <div class="in" style="color:#ef4444">資金缺口 G<b>${wan(r.G)}</b></div>
+      <div class="in">資金覆蓋率<b>${f(r.cov,1)}%</b></div>
+    </div>
+  </div></div>`;
 }
 function setCl(i){S.cl=i;const c=CL[i];Object.assign(S.ins,{C:c[1],E:c[2],D:c[3],L:c[4],R:c[5]});draw()}
 
 function pRest(){
   const r=S.rs,cl=claim(S.ins),it=[['進度達成率',r.ad/r.ap*100,100,80,'ad','ap'],['存活率',r.al/r.pl*100,90,85,'al','pl'],['監測完成率',r.md/r.mp*100,100,90,'md','mp']];
-  let h=`<h2>生態復育進度與指標監控</h2><div class="g g2">`;
-  it.forEach(x=>{const v=isFinite(x[1])?x[1]:0;h+=`<div class="c"><b>${x[0]}：${f(v,1)}%</b>${x[4]?`<div class="in" style="margin-top:8px">${num(r,x[4])} / ${num(r,x[5])}</div>`:''}</div>`});
-  return h+`</div>`;
+  let h=`<div class="c"><h2>生態復育進度與指標監控</h2><div class="g g2" style="margin-top:16px;">`;
+  it.forEach(x=>{const v=isFinite(x[1])?x[1]:0;h+=`<div class="c" style="margin-bottom:0;"><div class="k">${x[0]}</div><div class="big">${f(v,1)}%</div>${x[4]?`<div class="row" style="margin-top:10px">${num(r,x[4])} / ${num(r,x[5])}</div>`:''}</div>`});
+  return h+`</div></div>`;
 }
 
 function search(st){
@@ -131,7 +264,7 @@ function search(st){
   })(0,{...cur},0);
   out.sort((a,b)=>a.ch-b.ch||b.m-a.m||a.s-b.s);
   const mn=out.length?out[0].ch:0;
-  return{m0,q0,res:out.filter(o=>o.ch===mn).slice(0,3)}
+  return{m0,q0,res:out.filter(o=>o.ch===mn).sort((a,b)=>a.m-b.m||a.s-b.s).slice(0,3)}
 }
 
 async function callGemini(prompt, imageBase64List = [], jsonMode = false) {
@@ -154,7 +287,7 @@ async function ai(key,fn){ S.busy=key; S.err=''; draw(); try{ await fn(); } catc
 
 function docRun(){return ai('doc',async()=>{
   if(!S.doc.trim())throw{message:'請先貼上文件內容'};
-  const prompt='依評分表擷取證據並建議分數。只回傳 JSON 陣列：[{"k":"代碼","score":1到5,"quote":"原文","reason":"理由"}]\n'+rub+'\n文件：\n'+S.doc;
+  const prompt='依評分表擷取證據並建議分數。只回傳 JSON 陣列：[{"k":"代碼","score":1到5,"quote":"原文","reason":"理由"}]\n'+rub+'\n文件:\n'+S.doc;
   const r=await callGemini(prompt,[],true);
   S.docRes=(Array.isArray(r)?r:(r.items||[])).map(it=>({...it,ok:!!nz(it.quote)&&nz(S.doc).includes(nz(it.quote))}));
 })}
@@ -189,27 +322,42 @@ function tnfdRun(){return ai('tnfd',async()=>{
 
 function pAudit2(){
   const sr=search(S.path),cur=S.sc[S.path],bs=k=>S.busy===k;
-  const dchip=(t,tx)=>`<button style="${S.docStage===t?'background:#0284c7;color:#fff':'background:#e2e8f0'}" onclick="S.docStage='${t}';draw()">${tx}</button>`;
-  return `<h2>AI 智慧查核與決策輔助</h2>
-  <div class="c"><b>① 佐證文件智慧判讀</b><div style="margin:8px 0;display:flex;gap:6px">${dchip('b','套用到施工前')}${dchip('a','套用到施工後')}<button onclick="S.doc=DOC0;S.docRes=null;draw()">載入示範日誌</button></div>
-  <textarea placeholder="在此貼上施工日誌…" oninput="S.doc=this.value">${esc(S.doc)}</textarea>
-  <div style="margin-top:8px"><button class="btn" onclick="docRun()">${bs('doc')?'判讀中…':'開始 AI 判讀'}</button></div>
-  ${(S.docRes||[]).map((it,i)=>`<div class="ev"><b>${it.k}：建議 ${it.score} 分</b><br><blockquote>「${esc(it.quote)}」</blockquote>${it.ok?(it.done?'已採用':`<button onclick="adopt(${i})">採用</button>`):''}</div>`).join('')}</div>
+  const dchip=(t,tx)=>`<button class="btn" style="padding:6px 12px;font-size:12px;${S.docStage===t?'':'background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;'}" onclick="S.docStage='${t}';draw()">${tx}</button>`;
+  return `<div class="c"><h2>AI 智慧查核與決策輔助</h2>
+  <div class="ai" style="margin-top:16px;">Secure Cloud AI 後端代理通道運行中</div>
+  ${S.err?`<div class="err">${esc(S.err)}</div>`:''}
   
-  <div class="c" style="margin-top:15px"><b>② 遙測影像 AI 交叉比對</b>
-  <div class="imgs" style="margin:8px 0">${['b','a'].map(w=>`<div>${S.img[w]?`<img src="${S.img[w]}">`:`<div style="height:80px;background:#e2e8f0;display:grid;place-items:center">尚無影像</div>`}</div>`).join('')}</div>
-  <button class="btn" onclick="setDemo()">載入示範影像</button> <button class="btn" onclick="imgRun()">${bs('img')?'分析中…':'執行 Gemini 驗證'}</button>
-  ${S.imgRes?`<div class="ev">移除比例：${S.imgRes.removal_pct}%<br>${esc(S.imgRes.note)}</div>`:''}</div>
+  <div class="c" style="margin-top:16px;">
+    <div class="row"><b style="font-size:15px;">① 佐證文件智慧判讀</b><span class="tag">Gemini AI</span></div>
+    <div style="margin:12px 0;display:flex;gap:8px;flex-wrap:wrap;">${dchip('b','套用到施工前')}${dchip('a','套用到施工後')}<button class="btn" style="padding:6px 12px;font-size:12px;background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;" onclick="S.doc=DOC0;S.docRes=null;draw()">載入示範日誌</button></div>
+    <textarea placeholder="在此貼上施工日誌…" oninput="S.doc=this.value">${esc(S.doc)}</textarea>
+    <div style="margin-top:12px"><button class="btn" onclick="docRun()">${bs('doc')?'判讀中…':'開始 AI 判讀'}</button></div>
+    ${(S.docRes||[]).map((it,i)=>`<div class="ev"><b>${it.k}：建議 ${it.score} 分</b><br><blockquote>「${esc(it.quote)}」</blockquote>${it.ok?(it.done?'已採用':`<button class="btn" style="padding:4px 10px;font-size:11px;" onclick="adopt(${i})">採用</button>`):''}</div>`).join('')}
+  </div>
+  
+  <div class="c" style="margin-top:16px">
+    <div class="row"><b style="font-size:15px;">② 遙測影像 AI 交叉比對</b><span class="tag">Gemini AI</span></div>
+    <div class="imgs" style="margin:12px 0">${['b','a'].map(w=>`<div>${S.img[w]?`<img src="${S.img[w]}">`:`<div class="ev" style="height:100px;display:grid;place-items:center;color:var(--mut)">尚無影像</div>`}</div>`).join('')}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn" style="padding:8px 16px;font-size:12px;background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;" onclick="setDemo()">載入示範影像</button>
+      <button class="btn" style="padding:8px 16px;font-size:12px;" onclick="imgRun()">${bs('img')?'分析中…':'執行 Gemini 驗證'}</button>
+    </div>
+    ${S.imgRes?`<div class="ev" style="margin-top:12px;">移除比例：${S.imgRes.removal_pct}%<br>${esc(S.imgRes.note)}</div>`:''}
+  </div>
 
-  <div class="c" style="margin-top:15px"><b>③ 最佳保費改善路徑試算</b>
-  <div style="margin:8px 0"><button onclick="S.path='b';draw()">施工前</button> <button onclick="S.path='a';draw()">施工後</button></div>
-  ${sr.res.map((r,i)=>`<div>#${i+1}：${f(r.m,1)}×（年保費 ${f(S.L*S.rate/100*r.m,1)}萬）</div>`).join('')}
-  <button class="btn" style="margin-top:8px" onclick="planRun()">生成白話建議</button>
-  ${S.plain?`<div class="ev">${esc(S.plain)}</div>`:''}</div>
+  <div class="c" style="margin-top:16px">
+    <div class="row"><b style="font-size:15px;">③ 最佳保費改善路徑試算</b><span class="tag">AI 策略</span></div>
+    <div style="margin:12px 0;display:flex;gap:8px;"><button class="btn" style="padding:6px 12px;font-size:12px;${S.path==='b'?'':'background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;'}" onclick="S.path='b';draw()">施工前</button><button class="btn" style="padding:6px 12px;font-size:12px;${S.path==='a'?'':'background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;'}" onclick="S.path='a';draw()">施工後</button></div>
+    ${sr.res.map((r,i)=>`<div class="path"><b>#${i+1}</b>${IND.filter(x=>r.sc[x.k]!==cur[x.k]).map(x=>`<span class="t">${x.n} ${cur[x.k]}→${r.sc[x.k]}</span>`).join('')}<b class="r">${f(r.m,1)}×<div style="font-size:11px;color:var(--mut)">年保費 ${f(S.L*S.rate/100*r.m,1)}萬</div></b></div>`).join('')}
+    <div style="margin-top:12px"><button class="btn" style="padding:8px 18px;font-size:13px;" onclick="planRun()">生成白話建議</button></div>
+    ${S.plain?`<div class="ev" style="margin-top:10px">${esc(S.plain)}</div>`:''}
+  </div>
 
-  <div class="c" style="margin-top:15px"><b>④ TNFD 自然風險揭露草稿</b>
-  <button class="btn" style="margin-top:8px" onclick="tnfdRun()">生成揭露報告</button>
-  ${S.tnfd?`<textarea style="margin-top:8px">${esc(S.tnfd)}</textarea>`:''}</div>`;
+  <div class="c" style="margin-top:16px">
+    <div class="row"><b style="font-size:15px;">④ TNFD 自然風險揭露草稿</b><span class="tag">AI 生成</span></div>
+    <div style="margin-top:12px"><button class="btn" style="padding:8px 18px;font-size:13px;" onclick="tnfdRun()">生成揭露報告</button></div>
+    ${S.tnfd?`<textarea style="margin-top:10px">${esc(S.tnfd)}</textarea>`:''}
+  </div></div>`;
 }
 
 function num(o,k,min=0,max=1e9){return`<input type="number" value="${o[k]}" min="${min}" max="${max}" step="any" data-o="${o===S.ins?'ins':o===S.rs?'rs':o===S.soc?'soc':o===S.gov?'gov':'S'}" data-k="${k}">`}
@@ -228,6 +376,7 @@ function draw(){
 function dl(t,n,m){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:m}));a.download=n;a.click()}
 $('#expJ').onclick=()=>dl(JSON.stringify({state:S},null,2),'aidc.json','application/json');
 $('#expC').onclick=()=>dl('階段,S,Q\n施工前,'+f(prem('b').s)+'\n施工後,'+f(prem('a').s),'aidc.csv','text/csv;charset=utf-8');
+$('#tgl').onclick=()=>{const r=document.documentElement,d=r.dataset.theme==='dark';r.dataset.theme=d?'':'dark';};
 
 draw(); setDemo();
 </script>
