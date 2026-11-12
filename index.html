@@ -2,36 +2,76 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>AIDC 生態保費試算 (前端直連版)</title>
+    <title>AIDC 生態保費試算</title>
     <style>
-        body { font-family: system-ui, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
-        .card { border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; background: #f9f9f9; }
-        textarea { width: 100%; height: 120px; padding: 10px; margin-top: 10px; box-sizing: border-box; }
-        button { background: #0066cc; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        body { font-family: system-ui, sans-serif; max-width: 900px; margin: 30px auto; padding: 0 20px; line-height: 1.6; color: #333; }
+        h1 { border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .card { border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; background: #fdfdfd; }
+        textarea { width: 100%; height: 100px; padding: 10px; margin-top: 10px; box-sizing: border-box; }
+        button { background: #0066cc; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 10px; }
         button:hover { background: #004d99; }
-        .result { margin-top: 15px; padding: 15px; background: #fff; border: 1px solid #ccc; white-space: pre-wrap; border-radius: 4px; }
-        .status { padding: 8px; background: #e7f4e8; border: 1px solid #d4edda; margin-bottom: 15px; border-radius: 4px; color: #155724; font-size: 14px; }
+        .result { margin-top: 15px; padding: 12px; background: #f1f3f5; border: 1px solid #ccc; white-space: pre-wrap; border-radius: 4px; }
+        .flex-box { display: flex; gap: 15px; margin-bottom: 15px; }
+        .metric-box { flex: 1; background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
     </style>
 </head>
 <body>
 
-    <h1>AIDC 生態保費試算系統</h1>
+    <h1>AIDC 生態保費試算</h1>
     <p>把生態風險，變成看得懂的保費（前端直連穩定版）。</p>
 
-    <div class="status" id="statusBox">
-        ✨ 系統就緒：已改用前端直接連線 Gemini AI，不再依賴失效的後端伺服器。
+    <!-- 狀態摘要區塊 -->
+    <div class="flex-box">
+        <div class="metric-box">
+            <h4>施工前生態分數 S</h4>
+            <div style="font-size: 24px; font-weight: bold; color: #d97706;">47.50</div>
+            <small>中風險</small>
+        </div>
+        <div class="metric-box">
+            <h4>施工後生態分數 S</h4>
+            <div style="font-size: 24px; font-weight: bold; color: #059669;">26.25</div>
+            <small>低風險</small>
+        </div>
+        <div class="metric-box">
+            <h4>施工後假設年保費</h4>
+            <div style="font-size: 24px; font-weight: bold; color: #2563eb;">2.0 萬</div>
+            <small>比施工前少 0.6 萬</small>
+        </div>
     </div>
 
+    <!-- ① 佐證文件判讀 -->
     <div class="card">
-        <h3>① 佐證文件判讀 (Gemini AI)</h3>
-        <p>從施工日誌找出證據，提出建議與佐證文字。</p>
-        <textarea id="logInput" placeholder="請在此貼上施工日誌或監測報告內容..."></textarea>
-        <button onclick="runGeminiAI()">開始 Gemini AI 判讀</button>
+        <h3>① 佐證文件判讀 · 中級（人工覆核後使用）</h3>
+        <p><b>從施工日誌找出證據，提出建議分數。</b>貼上施工日誌、監測報告等文字，AI 擷取數據並引用原文。</p>
+        <textarea id="logInput" placeholder="在這裡貼上施工日誌或監測報告的文字內容…"></textarea>
+        <button onclick="runGeminiAI()">Gemini AI 判讀</button>
         <div id="aiResult" class="result" style="display:none;"></div>
     </div>
 
-    <!-- 請在此處填入你剛剛複製的 Gemini API 金鑰 -->
+    <!-- ② 遙測影像判讀 -->
+    <div class="card">
+        <h3>② 遙測影像判讀 · 防漂綠</h3>
+        <p>上傳施工前、施工後的衛星或空拍影像，AI 直接看圖估算植被移除比例。</p>
+        <p>施工前綠覆率：<b>90.92%</b> | 施工後綠覆率：<b>68.00%</b> (-22.92 個百分點)</p>
+    </div>
+
+    <!-- ③ 改善路徑 -->
+    <div class="card">
+        <h3>③ 改善路徑 · 規則計算＋AI 說明</h3>
+        <p>降一個保費級距，最少要改哪幾項：</p>
+        <ul>
+            <li><b>方案 1：</b>棲地敏感性 3→1、植被移除 3→1、逕流與透水 3→1、冷卻排熱 3→1 (年保費 2.0 萬)</li>
+        </ul>
+    </div>
+
+    <!-- ④ 自然風險揭露草稿 -->
+    <div class="card">
+        <h3>④ 自然風險揭露草稿</h3>
+        <p>依 LEAP 四步驟（定位、評估、衡量、準備）草擬一段揭露文字，可直接編輯。</p>
+    </div>
+
     <script>
+        // 直接使用你在 Google AI Studio 申請的金鑰
         const GEMINI_API_KEY = "請貼上你的Gemini_API_Key";
 
         async function runGeminiAI() {
@@ -43,7 +83,7 @@
                 return;
             }
             if (!promptText) {
-                alert('請先輸入要判讀的施工日誌內容！');
+                alert('請先輸入施工日誌內容！');
                 return;
             }
 
