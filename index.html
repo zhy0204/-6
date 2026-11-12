@@ -50,7 +50,7 @@ body {
 /* 上方橫向頁籤 */
 .tabs {
   display: flex; gap: 4px; background: var(--card); border-radius: 99px; padding: 6px;
-  width: max-width; max-width: 100%; margin: 0 auto 24px; overflow-x: auto;
+  width: max-content; max-width: 100%; margin: 0 auto 24px; overflow-x: auto;
   border: 1px solid var(--line); box-shadow: var(--shadow);
 }
 .tabs button {
@@ -152,7 +152,7 @@ const IND=[
 {k:'r',n:'逕流與透水影響',w:15,c:'#3b82f6',i:'💧',L:['透水及逕流控制完善並有紀錄','有控制設施但成效待驗證','局部積水或控制不完整','缺乏必要控制','已記錄泥沙外流或水體受損'],r:'逕流'},
 {k:'t',n:'冷卻排熱影響',w:15,c:'#f97316',i:'🌡',L:['無直接熱水排放且有紀錄','有降溫並持續監測','排放溫差或影響待確認','有異常升溫紀錄','有升溫及生態損害證據'],r:'排熱'},
 {k:'m',n:'監測與治理',w:10,c:'#71717a',i:'📈',L:['定期監測、可追溯並持續改善','定期監測但紀錄不完整','不定期監測','缺乏系統且異常未改善','重大異常未處理或無法追溯'],r:'監測'},
-{k:'n',n:'夜間施工干擾',w:5,L:['0%','大於 0% 至 10%','大於 10% 至 30%','大於 30% 至 50%','大於 50%'],r:'夜間'}];
+{k:'n',n:'夜間施工干擾',w:5,L:['0%','大於 0% 至 10%','大於 10% 至 30%','大於 30% 至 50%','50% 以上'],r:'夜間'}];
 
 const CL=[['損失超過上限',300,250,30,200,80],['損失低於自負額',40,25,30,200,80],['部分保障、自留足夠',150,120,30,200,80]];
 const S={tab:0,sc:{b:{h:3,v:3,r:3,t:3,m:2,n:3},a:{h:2,v:2,r:3,t:2,m:1,n:2}},soc:{b:70,a:85},gov:{b:70,a:90},L:200,rate:1,cl:0,
@@ -195,7 +195,7 @@ function pAssess(){
       <div style="margin-top:12px; font-size:12px; color:var(--mut)">施工後評分：${S.sc.a[x.k]} 分</div>${seg('a',x.k)}
     </div>`;
   });
-  return h+`</div></div>`;
+  return h + `</div></div>`;
 }
 
 function pPrem(){
@@ -251,7 +251,7 @@ function pRest(){
   const r=S.rs,cl=claim(S.ins),it=[['進度達成率',r.ad/r.ap*100,100,80,'ad','ap'],['存活率',r.al/r.pl*100,90,85,'al','pl'],['監測完成率',r.md/r.mp*100,100,90,'md','mp']];
   let h=`<div class="c"><h2>生態復育進度與指標監控</h2><div class="g g2" style="margin-top:16px;">`;
   it.forEach(x=>{const v=isFinite(x[1])?x[1]:0;h+=`<div class="c" style="margin-bottom:0;"><div class="k">${x[0]}</div><div class="big">${f(v,1)}%</div>${x[4]?`<div class="row" style="margin-top:10px">${num(r,x[4])} / ${num(r,x[5])}</div>`:''}</div>`});
-  return h+`</div></div>`;
+  return h + `</div></div>`;
 }
 
 function search(st){
@@ -287,7 +287,7 @@ async function ai(key,fn){ S.busy=key; S.err=''; draw(); try{ await fn(); } catc
 
 function docRun(){return ai('doc',async()=>{
   if(!S.doc.trim())throw{message:'請先貼上文件內容'};
-  const prompt='依評分表擷取證據並建議分數。只回傳 JSON 陣列：[{"k":"代碼","score":1到5,"quote":"原文","reason":"理由"}]\n'+rub+'\n文件:\n'+S.doc;
+  const prompt='依評分表擷取證據並建議分數。只回傳 JSON 陣列：[{"k":"代碼","score":1到5,"quote":"原文","reason":"理由"}]\n'+rub+'\n文件：\n'+S.doc;
   const r=await callGemini(prompt,[],true);
   S.docRes=(Array.isArray(r)?r:(r.items||[])).map(it=>({...it,ok:!!nz(it.quote)&&nz(S.doc).includes(nz(it.quote))}));
 })}
