@@ -149,6 +149,7 @@ blockquote { margin: 10px 0; padding: 10px 14px; border-left: 3px solid var(--ac
     </div>
   </div>
 
+  <!-- 五個分頁導覽列 -->
   <div class="tabs" id="tabs"></div>
   <div class="g g4" id="sum" style="margin-bottom: 24px;"></div>
 
@@ -210,7 +211,7 @@ function seg(st,k){return`<div class="seg">${[1,2,3,4,5].map(v=>`<button class="
 
 function num(o,k,min=0,max=1e9){return`<input type="number" value="${o[k]}" min="${min}" max="${max}" step="any" data-o="${o===S.ins?'ins':o===S.rs?'rs':o===S.soc?'soc':o===S.gov?'gov':'S'}" data-k="${k}">`}
 
-// 索引 0：核心評估
+// 0: 核心評估
 function pAssess(){
   const b=prem('b'),a=prem('a');
   let h=`<h2>六個指標，一眼看懂風險</h2><p class="note" style="margin-top:0">依 TNFD LEAP 自訂的初步篩選表。點選 1–5 分調整指標。</p>
@@ -235,7 +236,7 @@ function pAssess(){
   return h+`</div></div>`;
 }
 
-// 索引 1：保費試算
+// 1: 保費試算
 function pPrem(){
   const b=prem('b'),a=prem('a'),q2=Qf(a.s,S.soc.b,S.gov.b),m2=mult(q2,a.hi),p2=S.L*S.rate/100*m2,sc3=prem('a');
   const rows=[['改善前',b.s,S.soc.b,S.gov.b,b.q,b.m,b.p],['只改善生態',a.s,S.soc.b,S.gov.b,q2,m2,p2],['三構面皆改善',a.s,S.soc.a,S.gov.a,sc3.q,sc3.m,sc3.p]];
@@ -252,7 +253,7 @@ function pPrem(){
   <div class="c tw" style="margin-top:20px"><div class="k">情境方案比較</div><table><tr><th>情境方案</th><th>S / 社會 / 治理</th><th>Q 值</th><th>倍數</th><th>預估年保費</th></tr>${rows.map((r,i)=>`<tr class="${i==1?'hl':''}"><td>${r[0]}</td><td>${f(r[1])} / ${r[2]} / ${r[3]}</td><td>${f(r[4])}</td><td>${f(r[5],1)}</td><td>${f(r[6],1)} 萬</td></tr>`).join('')}</table></div>`;
 }
 
-// 索引 2：理賠防護
+// 2: 理賠防護
 function pClaim(){
   const x=S.ins,r=claim(x),tot=x.C||1;
   return `<h2>損害發生與保險給付試算</h2><p class="note" style="margin-top:0">保險先賠、自留資金補上，剩下的即為資金缺口。</p>
@@ -272,7 +273,7 @@ function pClaim(){
   <div class="c"><div class="k">試算結果摘要</div><div class="in">總復育成本 C<b>${f(x.C,1)} 萬</b></div><div class="in">保險給付 I<b>${f(r.I,1)} 萬</b></div><div class="in">企業自行負擔 U<b>${f(r.U,1)} 萬</b></div><div class="in" style="color:#ef4444">資金缺口 G<b>${f(r.G,1)} 萬</b></div><div class="in">資金覆蓋率<b>${f(r.cov,1)}%</b></div></div></div>`;
 }
 
-// 索引 3：復育監控
+// 3: 復育監控
 function pRest(){
   const r=S.rs,cl=claim(S.ins),it=[['進度達成率',r.ad/r.ap*100,100,80,'ad','ap','累計完成 ÷ 當期計畫'],['存活率',r.al/r.pl*100,90,85,'al','pl','存活株數 ÷ 初植株數'],['監測完成率',r.md/r.mp*100,100,90,'md','mp','實際次數 ÷ 應完成次數'],['資金覆蓋率',cl.cov,100,80,null,null,'自留資金 ÷ 自行負擔']];
   const ls=it.map(x=>{const v=isFinite(x[1])?x[1]:0;return{x,v,l:light(v,x[2],x[3])}});
@@ -283,7 +284,7 @@ function pRest(){
   return h;
 }
 
-// 索引 4：AI 智慧查核（包含遙測影像交叉比對）
+// 4: AI 智慧查核（包含遙測影像交叉比對）
 function pAudit2(){
   const sr=search(S.path),cur=S.sc[S.path],bs=k=>S.busy===k;
   const chip=(t,tx)=>`<button class="btn" style="padding:6px 14px;font-size:12px;${S.path===t?'':'background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;'}" onclick="S.path='${t}';draw()">${tx}</button>`;
@@ -411,7 +412,7 @@ function setCl(i){S.cl=i;const c=CL[i];Object.assign(S.ins,{C:c[1],E:c[2],D:c[3]
 
 function draw(){
   tabs(); summary();
-  // 嚴格對應 5 個分頁函式：0:核心評估, 1:保費試算, 2:理賠防護, 3:復育監控, 4:AI 智慧查核
+  // 嚴格對應 5 個分頁的函式陣列
   const pages = [pAssess, pPrem, pClaim, pRest, pAudit2];
   const renderFn = pages[S.tab] || pAssess;
   $('#pane').innerHTML = renderFn();
