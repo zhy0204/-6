@@ -145,7 +145,7 @@ return`<h2>損害發生時，錢從哪來。</h2><p class="note" style="margin-t
 <p class="k">給付可能晚於支出，即使缺口為零仍須檢查短期周轉。</p></div></div>
 <div class="fm">I = min(max(E − D, 0), L) · U = C − I · G = max(U − R, 0) · 資金覆蓋率 = R ÷ U</div>`}
 function setCl(i){S.cl=i;const c=CL[i];Object.assign(S.ins,{C:c[1],E:c[2],D:c[3],L:c[4],R:c[5]});draw()}
-function pRest(){const r=S.rs,cl=claim(S.ins),it=[['進度達成率',r.ad/r.ap*100,100,80,'ad','ap','累計完成面積 ÷ 當期計畫面積','綠 ≥100% 黃 ≥80% 且 <100% 紅 <80%'],['存活率',r.al/r.pl*100,90,85,'al','pl','存活株數 ÷ 初植株數','綠 ≥90% 黃 ≥85% 且 <90% 紅 <85%'],['監測完成率',r.md/r.mp*100,100,90,'md','mp','實際次數 ÷ 應完成次數','綠 ≥100% 黃 ≥90% 且 <100% 紅 <90%'],['資金覆蓋率',cl.cov,100,80,null,null,'連動理賠頁：R '+f(S.ins.R,1)+' 萬 ÷ U '+f(cl.U,1)+' 萬','綠 ≥100% 黃 ≥80% 且 <100% 紅 <80%']];
+function pRest(){const r=S.rs,cl=claim(S.ins),it=[['進度達成率',r.ad/r.ap*100,100,80,'ad','ap','累計完成面積 ÷ 當期計畫面積','綠 ≥100% 黃 ≥80% 且 <100% 紅 <80%'],['存活率',r.al/r.pl*100,90,85,'al','pl','存活株數 ÷ 初植株數','綠 ≥90% 黃 ≥85% 且 <90% 紅 <85%'],['監測完成率',r.md/r.mp*100,100,90,'md','mp','實際次數 ÷ 應完成次數','綠 ≥100% 黃 ≥90% 且 <90% 紅 <90%'],['資金覆蓋率',cl.cov,100,80,null,null,'連動理賠頁：R '+f(S.ins.R,1)+' 萬 ÷ U '+f(cl.U,1)+' 萬','綠 ≥100% 黃 ≥80% 且 <100% 紅 <80%']];
 const ls=it.map(x=>{const v=isFinite(x[1])?x[1]:0;return{x,v,l:light(v,x[2],x[3])}});
 let h=`<h2>復育進度，一目了然。</h2><div class="g g2 stack" style="margin-top:20px">`;
 ls.forEach(({x,v,l})=>{h+=`<div class="c"><div class="row"><div class="row" style="gap:16px">${ringSvg(v,l[1])}<div><div class="k">${x[0]}</div><div class="big" style="font-size:38px">${f(v,1)}%</div></div></div><span class="pill ${l[2]}">${l[0]}</span></div>
