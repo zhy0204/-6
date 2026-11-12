@@ -102,6 +102,7 @@ textarea { width: 100%; text-align: left; color: var(--ink); font-weight: 400; m
 }
 .btn:hover { opacity: 0.92; transform: translateY(-1px); }
 .btn.go { background: linear-gradient(135deg, var(--accent), #0284c7); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
 table { width: 100%; border-collapse: collapse; margin-top: 16px; }
 th, td { text-align: right; padding: 16px 12px; border-bottom: 1px solid var(--line); font-weight: 600; }
@@ -141,7 +142,7 @@ blockquote { margin: 10px 0; padding: 10px 14px; border-left: 3px solid var(--ac
   <div class="header-bar">
     <div>
       <h1>AIDC 生態保費試算系統</h1>
-      <p>把生態風險，變成看得懂的保費</p>
+      <p>把生態風險，變成看得懂的保費（Flask 安全後端版）</p>
     </div>
     <div style="display:flex; gap:10px;">
       <button class="btn" style="background:var(--bg); color:var(--ink); border:1px solid var(--line); box-shadow:none;" id="expJ">匯出 JSON</button>
@@ -152,7 +153,7 @@ blockquote { margin: 10px 0; padding: 10px 14px; border-left: 3px solid var(--ac
   <div class="tabs" id="tabs"></div>
   <div class="g g4" id="sum" style="margin-bottom: 24px;"></div>
 
-  <p class="note"><b style="color:var(--ink)">模擬情境。</b>以虛擬 AIDC 基地示範；分數、費率與成本皆為假設。AI 請求統一經由 Flask 後端代理呼叫 Gemini API。</p>
+  <p class="note"><b style="color:var(--ink)">模擬情境。</b>以虛擬 AIDC 基地示範；分數、費率與成本皆為假設，並非業界報價或精算結果。AI 請求統一經由 Flask 後端代理呼叫 Gemini API，確保金鑰隱私安全。</p>
 
   <div id="pane"></div>
 </div>
@@ -171,7 +172,7 @@ const IND=[
 
 const CL=[['損失超過上限',300,250,30,200,80],['損失低於自負額',40,25,30,200,80],['部分保障、自留足夠',150,120,30,200,80]];
 const S={tab:0,sc:{b:{h:3,v:3,r:3,t:3,m:2,n:3},a:{h:2,v:2,r:3,t:2,m:1,n:2}},soc:{b:70,a:85},gov:{b:70,a:90},L:200,rate:1,cl:0,
-ins:{C:300,E:250,D:30,L:200,R:80},rs:{ad:4200,ap:5000,al:452,pl:500,md:11,mp:12},path:'b',own:'',due:'',rev:'',doc:'',docStage:'a',docRes:null,log:[],img:{b:null,a:null},imgDates:{b:'',a:''},demoN:0,imgRes:null,plain:'',tnfd:'',busy:'',err:''};
+ins:{C:300,E:250,D:30,L:200,R:80},rs:{ad:4200,ap:5000,al:452,pl:500,md:11,mp:12},path:'b',own:'',due:'',rev:'',doc:'',docStage:'a',docRes:null,log:[],img:{b:null,a:null},imgDates:{b:'',a:''},roi:{x:0,y:0,w:100,h:100},demoN:0,isDemo:true,imgRes:null,plain:'',tnfd:'',busy:'',err:''};
 
 const f=(n,d=2)=>Number(n).toFixed(d);
 const calcS=sc=>100*IND.reduce((s,x)=>s+x.w/100*(sc[x.k]-1)/4,0);
@@ -283,54 +284,67 @@ function pRest(){
   return h;
 }
 
-// 4: AI 智慧查核（包含遙測影像交叉比對）
+// --- 遙測影像面板補助函數 ---
+const clampPct=v=>{if(v===null||v===undefined||String(v).trim()==='')return null;const n=Number(v);return Number.isFinite(n)?Math.min(100,Math.max(0,n)):null};
+const removalPct=(before,after)=>{if(before===null||before===undefined||after===null||after===undefined)return null;const b=Number(before),a=Number(after);if(!Number.isFinite(b)||!Number.isFinite(a)||b<=0)return null;return (b-a)/b*100};
+const pctScore=p=>{const v=clampPct(p);return v==null?null:v<10?1:v<25?2:v<50?3:v<=75?4:5};
+
+function imgPanel(){
+  const I=S.img, pr=removalPct(I.gb,I.ga), sc=S.sc.a.v, R=S.imgRes;
+  const ap=R&&R.removal_pct!==null&&R.removal_pct!==undefined&&Number.isFinite(Number(R.removal_pct))?Math.max(-100,Math.min(100,Number(R.removal_pct))):null;
+  const change=I.gb!=null&&I.ga!=null?I.ga-I.gb:null;
+  const status=I.gb==null||I.ga==null?'尚未完成影像比較':I.gb<0.5?'施工前綠覆率過低，移除比例不可靠':change>0.2?'施工後綠覆率增加，請先檢查範圍與影像色調':change< -0.2?'施工後綠覆率下降，仍須確認植被辨識':'前後綠覆率接近，請確認影像品質';
+  const displayRemoval=v=>v==null?'—':v<0?'不適用（綠覆率增加）':f(v,1)+'%';
+  
+  let h='<div class="imgs">'+['b','a'].map(w=>'<div>'+(I[w]?'<img src="'+I[w]+'">':'<div class="ev k" style="height:140px;justify-content:center">尚未提供影像</div>')+'<div class="row k" style="margin-top:6px"><span>'+(w==='b'?'施工前':'施工後')+'</span><span>'+(I[w==='b'?'gb':'ga']!=null?'綠覆 '+f(I[w==='b'?'gb':'ga'],2)+'%':'')+'</span></div></div>').join('')+'</div>';
+  h+='<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" style="background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;padding:8px 16px;font-size:12.5px" onclick="setDemo();draw()">換一組示範影像</button><button class="btn" style="background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;padding:8px 16px;font-size:12.5px" onclick="this.nextElementSibling.click()">上傳施工前</button><input type="file" accept="image/*" hidden onchange="up(\'b\',this)"><button class="btn" style="background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;padding:8px 16px;font-size:12.5px" onclick="this.nextElementSibling.click()">上傳施工後</button><input type="file" accept="image/*" hidden onchange="up(\'a\',this)"></div>';
+  h+='<div class="ev"><b>基地分析範圍（兩張圖套用相同百分比）</b><p class="k">若截圖包含基地外道路、廠房或周邊綠地，可設定裁切範圍。請讓兩張截圖的基地位置與比例一致，再輸入範圍。</p><div class="g g4"><label class="k">左側起點 %<input id="roiX" type="number" min="0" max="99" value="'+S.roi.x+'"></label><label class="k">上方起點 %<input id="roiY" type="number" min="0" max="99" value="'+S.roi.y+'"></label><label class="k">寬度 %<input id="roiW" type="number" min="1" max="100" value="'+S.roi.w+'"></label><label class="k">高度 %<input id="roiH" type="number" min="1" max="100" value="'+S.roi.h+'"></label></div><button class="btn go" style="margin-top:10px" onclick="applyRoi()">套用相同基地範圍並重算</button></div>';
+  h+='<div class="c" style="background:var(--bg);border:1px solid var(--line)"><div class="in"><span>施工前綠覆率（HSV 色彩估算）</span><b>'+(I.gb==null?'—':f(I.gb,2)+'%')+'</b></div><div class="in"><span>施工後綠覆率（HSV 色彩估算）</span><b>'+(I.ga==null?'—':f(I.ga,2)+'%')+'</b></div><div class="in"><span>綠覆率變化（百分點）</span><b>'+(change==null?'—':(change>0?'+':'')+f(change,2)+' 個百分點')+'</b></div><div class="in"><span>像素估算植被移除比例</span><b>'+displayRemoval(pr)+'</b></div><div class="in"><span>Gemini AI 影像判讀</span><b>'+(ap==null?'尚未判讀':displayRemoval(ap))+'</b></div><div class="in"><span>企業自評（施工後·植被移除比例）</span><b>'+sc+' 分（'+IND[1].L[sc-1]+'）</b></div><div class="in"><span>判讀狀態</span><b class="pill '+(change!=null&&change>0.2?'mi':'gy')+'">'+status+'</b></div><div class="in"><span>交叉驗證</span>'+(pr==null||ap==null?'<span class="pill gy">待判讀</span>':'<span class="pill '+(Math.abs(pctScore(Math.max(0,pr))-pctScore(Math.max(0,ap)))===0?'lo':'mi')+'">'+(Math.abs(pctScore(Math.max(0,pr))-pctScore(Math.max(0,ap)))===0?'同級':'結果有差異・須複核')+'</span>')+'</div>'+(R&&R.note?'<p class="k">Gemini 說明：'+esc(R.note)+'</p>':'')+'<p class="k">注意：當施工前綠覆率低於 0.5% 時，比例計算對微小辨識誤差非常敏感，不應直接用來評分或定價。</p></div>';
+  return h;
+}
+
+// 4: AI 智慧查核（包含佐證文件、遙測影像交叉比對、改善路徑、TNFD 揭露）
 function pAudit2(){
   const sr=search(S.path),cur=S.sc[S.path],bs=k=>S.busy===k;
-  const chip=(t,tx)=>`<button class="btn" style="padding:6px 14px;font-size:12px;${S.path===t?'':'background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;'}" onclick="S.path='${t}';draw()">${tx}</button>`;
+  const chip=(t,tx)=>`<button class="btn" style="padding:6px 14px;font-size:12px;${S.path===t?'':'background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;'}" onclick="S.path='${t}';S.plain='';draw()">${tx}</button>`;
   const dchip=(t,tx)=>`<button class="btn" style="padding:6px 14px;font-size:12px;${S.docStage===t?'':'background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;'}" onclick="S.docStage='${t}';draw()">${tx}</button>`;
-  return `<h2>AI 智慧查核與決策輔助</h2><p class="note" style="margin-top:0">透過 Gemini AI 協助文件解析與影像交叉驗證。</p>
+  const dis=S.busy?' disabled':'';
+
+  let h=`<h2>AI 智慧查核與決策輔助</h2><p class="note" style="margin-top:0">透過 Gemini AI 協助文件解析與影像交叉驗證。</p>
   <div class="ai">Secure Cloud AI 後端代理通道運行中</div>
   ${S.err?`<div class="err">${esc(S.err)}</div>`:''}
   
   <div class="c">
     <div class="row"><b>① 佐證文件智慧判讀</b><span class="tag">Gemini AI</span></div>
-    <div style="margin:14px 0;display:flex;gap:8px;flex-wrap:wrap;">${dchip('b','套用到施工前')}${dchip('a','套用到施工後')}<button class="btn" style="padding:6px 14px;font-size:12px;background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;" onclick="S.doc=DOC0;S.docRes=null;draw()">載入示範日誌</button></div>
+    <div style="margin:14px 0;display:flex;gap:8px;flex-wrap:wrap;">${dchip('b','套用到施工前')}${dchip('a','套用到施工後')}<button class="btn" style="padding:6px 14px;font-size:12px;background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;" onclick="S.doc=DOC0;S.docRes=null;draw()">載入示範日誌</button><button class="btn" style="padding:6px 14px;font-size:12px;background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;" onclick="this.nextElementSibling.click()">上傳 .txt</button><input type="file" accept=".txt,text/plain" hidden onchange="upTxt(this)"></div>
     <textarea placeholder="在此貼上施工日誌…" oninput="S.doc=this.value">${esc(S.doc)}</textarea>
-    <div style="margin-top:12px"><button class="btn go" onclick="docRun()">${bs('doc')?'判讀中…':'開始 AI 判讀'}</button></div>
-    ${(S.docRes||[]).map((it,i)=>`<div class="ev"><b>${it.k}：建議 ${it.score} 分</b><br><blockquote>“${esc(it.quote)}”</blockquote>${it.ok?(it.done?'已採用':`<button class="btn go" style="padding:6px 14px;font-size:12px;" onclick="adopt(${i})">採用</button>`):''}</div>`).join('')}
+    <div style="margin-top:12px"><button class="btn go"${dis} onclick="docRun()">${bs('doc')?'判讀中…':'開始 AI 判讀'}</button></div>
+    ${(S.docRes||[]).map((it,i)=>{const x=IND.find(z=>z.k===it.k);return`<div class="ev"><b>${x?x.n:it.k}：建議 ${it.score} 分</b><span class="pill ${it.ok?'lo':'hi'}">${it.ok?'引文已核對':'引文未在文件中找到'}</span><br><div class="k">${esc(it.reason)}</div><blockquote>“${esc(it.quote)}”</blockquote>${it.ok?(it.done?'<span class="pill gy">已採用</span>':`<button class="btn go" style="padding:6px 14px;font-size:12px;" onclick="adopt(${i})">採用</button>`):'<span class="k">無法核對的證據不得採用</span>'}</div>`}).join('')}
+    ${S.log.length?'<div class="k" style="margin-top:12px">來源紀錄</div>'+S.log.map(l=>'<div class="k">'+l.t+'｜'+l.stage+'・'+l.k+' → '+l.score+' 分｜「'+esc(l.quote)+'」</div>').join(''):''}
   </div>
   
   <div class="c" style="margin-top:20px">
-    <div class="row"><b>② 遙測影像 AI 交叉比對</b><span class="tag">Gemini AI</span></div>
+    <div class="row"><b>② 遙測影像 AI 交叉比對</b><span>${S.isDemo?'<span class="pill mi">示範影像</span> ':''}<span class="tag">Gemini AI</span></span></div>
     <div style="margin:10px 0; font-size:13.5px; color:var(--mut);">
-      可先至 <a href="https://www.google.com/earth/" target="_blank" style="color:var(--accent); font-weight:700;">Google Earth 網頁版</a> 查詢並擷取歷史空拍影像。
+      可先至 <a href="https://earth.google.com/web/" target="_blank" rel="noopener" style="color:var(--accent); font-weight:700;">Google Earth 網頁版 ↗</a> 查詢並擷取歷史空拍影像。
     </div>
-    <div class="imgs">${['b','a'].map(w=>`<div>
-      ${S.img[w]?`<img src="${S.img[w]}">`:`<div class="ev" style="height:140px;display:grid;place-items:center;color:var(--mut)">尚無影像</div>`}
-      <div style="margin-top:10px; display:flex; flex-direction:column; gap:6px;">
-        <div class="row k"><span>${w==='b'?'施工前':'施工後'}影像</span><button class="btn" style="padding:4px 10px;font-size:11px;background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;" onclick="this.nextElementSibling.click()">上傳</button><input type="file" accept="image/*" hidden onchange="up('${w}',this)"></div>
-        <div class="row k" style="font-size:12px;"><span>影像日期</span><input type="date" value="${S.imgDates[w]||''}" onchange="S.imgDates['${w}']=this.value"></div>
-      </div>
-    </div>`).join('')}</div>
-    <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn" style="padding:8px 16px;font-size:12.5px;background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;" onclick="setDemo()">載入不同示範影像 (${S.demoN+1}/3)</button>
-      <button class="btn go" style="padding:8px 16px;font-size:12.5px;" onclick="imgRun()">${bs('img')?'分析中…':'執行 Gemini 驗證'}</button>
-    </div>
-    ${S.imgRes?`<div class="ev" style="margin-top:14px;">移除比例：${S.imgRes.removal_pct}%<br>${esc(S.imgRes.note)}</div>`:''}
+    <div class="ev"><b>Google Earth 影像匯入說明</b><p class="k">請至 Google Earth 搜尋基地位置並選擇相同視角與範圍截圖上傳。兩次日期記錄如下：</p><div class="g g2" style="margin-top:8px"><label class="k">施工前影像日期<input type="date" value="${S.imgDates.b}" onchange="S.imgDates.b=this.value"></label><label class="k">施工後影像日期<input type="date" value="${S.imgDates.a}" onchange="S.imgDates.a=this.value"></label></div></div>
+    ${imgPanel()}
+    <div style="margin-top:16px"><button class="btn go"${dis} onclick="imgRun()">${bs('img')?'分析中…':'執行 Gemini 驗證'}</button></div>
   </div>
 
   <div class="c" style="margin-top:20px">
     <div class="row"><b>③ 最佳保費改善路徑試算</b><span class="tag">AI 策略</span></div>
     <div style="margin:14px 0;display:flex;gap:8px;">${chip('b','施工前')}${chip('a','施工後')}</div>
-    ${sr.res.map((r,i)=>`<div class="path"><b>#${i+1}</b>${IND.filter(x=>r.sc[x.k]!==cur[x.k]).map(x=>`<span class="t">${x.n} ${cur[x.k]}→${r.sc[x.k]}</span>`).join('')}<b class="r">${f(r.m,1)}×<div class="k">年保費 ${f(S.L*S.rate/100*r.m,1)}萬</div></b></div>`).join('')}
-    <div style="margin-top:12px"><button class="btn go" style="padding:10px 18px;font-size:13.5px;" onclick="planRun()">生成白話建議</button></div>
-    ${S.plain?`<div class="ev" style="margin-top:12px">${esc(S.plain)}</div>`:''}
+    ${sr.m0===1?'<div class="rem">此階段已是最低倍數 1.0×，無須再降。</div>':!sr.res.length?'<div class="rem">僅改動生態指標無法降低倍數；須同步提高社會或治理分數。</div>':sr.res.map((r,i)=>`<div class="path"><b>#${i+1}</b>${IND.filter(x=>r.sc[x.k]!==cur[x.k]).map(x=>`<span class="t">${x.n} ${cur[x.k]}→${r.sc[x.k]}</span>`).join('')}<b class="r">${f(r.m,1)}×<div class="k">年保費 ${f(S.L*S.rate/100*r.m,1)}萬</div></b></div>`).join('')}
+    <div style="margin-top:12px"><button class="btn go"${dis} style="padding:10px 18px;font-size:13.5px;" onclick="planRun()">${bs('plan')?'產生中…':'生成白話建議'}</button></div>
+    ${S.plain?`<div class="ev" style="margin-top:12px"><span class="tag">Gemini AI 產出・須人工確認</span><p>${esc(S.plain).replace(/\n/g,'<br>')}</p></div>`:''}
   </div>
 
   <div class="c" style="margin-top:20px">
     <div class="row"><b>④ TNFD 自然風險揭露草稿</b><span class="tag">AI 生成</span></div>
-    <div style="margin-top:14px"><button class="btn go" style="padding:10px 18px;font-size:13.5px;" onclick="tnfdRun()">生成揭露報告</button></div>
-    ${S.tnfd?`<textarea style="margin-top:12px">${esc(S.tnfd)}</textarea>`:''}
+    <div style="margin-top:14px"><button class="btn go"${dis} style="padding:10px 18px;font-size:13.5px;" onclick="tnfdRun()">${bs('tnfd')?'草擬中…':'生成揭露報告'}</button></div>
+    ${S.tnfd?`<textarea style="margin-top:12px;min-height:220px" oninput="S.tnfd=this.value">${esc(S.tnfd)}</textarea>`:''}
   </div>`;
 }
 
@@ -354,64 +368,76 @@ async function callGemini(prompt, imageBase64List = [], jsonMode = false) {
 const rub=IND.map(x=>x.k+' '+x.n+'：'+x.L.map((l,i)=>(i+1)+'='+l).join('；')).join('\n');
 const nz=t=>String(t||'').replace(/\s+/g,'');
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&','<':'<','>':'>','"':'"'}[c]));
-const DOC0='2026/03/02 施工日誌：基地鄰接既有溪流，已設置 30 公尺緩衝帶。累計清除植被約 12%（約 0.6 公頃／原有 5 公頃）。\n2026/03/09 設置透水鋪面與滯洪池。\n2026/03/16 冷卻系統採閉路循環，每月出具報告。\n2026/03/30 定期監測並建立可追溯紀錄。';
+const DOC0='2026/03/02 施工日誌：基地鄰接既有溪流，已設置 30 公尺緩衝帶。累計清除植被約 12%（約 0.6 公頃／原有 5 公頃）。\n2026/03/09 設置透水鋪面與滯洪池，雨後局部仍有積水，排水控制尚未完整。\n2026/03/16 冷卻系統改採閉路循環，並持續監測排水溫度，每月出具報告。\n2026/03/23 夜間施工 4 天／總施工 60 天，約 7%。\n2026/03/30 每月定期監測並建立可追溯紀錄，上月異常已改善。';
 
 async function ai(key,fn){ S.busy=key; S.err=''; draw(); try{ await fn(); } catch(e){ S.err='後端 API 錯誤：'+((e&&e.message)||e); } S.busy=''; draw(); }
 
 function docRun(){return ai('doc',async()=>{
   if(!S.doc.trim())throw{message:'請先貼上文件內容'};
-  const prompt='依下列評分表擷取證據並建議分數。只回傳 JSON 陣列：[{"k":"代碼","score":1到5,"quote":"原文","reason":"理由"}]\n'+rub+'\n文件:\n'+S.doc;
+  const prompt='你是生態風險查核助理。依下列評分表，從文件擷取證據並建議各指標分數。只回傳 JSON 陣列，每筆格式 {"k":"指標代碼","score":1到5整數,"quote":"從文件逐字複製的原文，不可改寫或合併","reason":"一句話理由"}。文件中找不到證據的指標不要列出。\n評分表：\n'+rub+'\n文件：\n'+S.doc;
   const r=await callGemini(prompt,[],true);
-  S.docRes=(Array.isArray(r)?r:(r.items||[])).map(it=>({...it,ok:!!nz(it.quote)&&nz(S.doc).includes(nz(it.quote))}));
+  const a=Array.isArray(r)?r:(r.items||[]);
+  S.docRes=a.filter(it=>IND.some(x=>x.k===it.k)).map(it=>({...it,score:Math.min(5,Math.max(1,Math.round(it.score))),ok:!!nz(it.quote)&&nz(S.doc).includes(nz(it.quote))}));
 })}
 
-function adopt(i){const it=S.docRes[i];S.sc[S.docStage][it.k]=it.score;it.done=true;draw()}
+function adopt(i){const it=S.docRes[i];S.sc[S.docStage][it.k]=it.score;it.done=true;S.log.push({t:new Date().toLocaleString('zh-TW'),stage:S.docStage==='b'?'施工前':'施工後',k:IND.find(x=>x.k===it.k).n,score:it.score,quote:it.quote});draw()}
+function upTxt(inp){const f=inp.files[0];if(f)f.text().then(t=>{S.doc=t;S.docRes=null;draw()})}
 
-function mk(seed){let s=seed;const R=()=>(s=(s*1664525+1013904223)>>>0)/4294967296;
+function mk(seed,k){let s=seed;const R=()=>(s=(s*1664525+1013904223)>>>0)/4294967296;
 const c=document.createElement('canvas');c.width=400;c.height=300;const g=c.getContext('2d');
-g.fillStyle='hsl('+(seed%360)+',40%,35%)';g.fillRect(0,0,400,300);
-for(let i=0;i<180;i++){g.fillStyle='hsl('+(seed*13+R()*40)+',50%,28%)';g.beginPath();g.arc(R()*400,R()*300,8+R()*20,0,7);g.fill()}
-const u1=c.toDataURL('image/jpeg',.85);
-g.fillStyle='hsl('+(seed%360+50)+',30%,45%)';g.fillRect(0,0,400,300);
-for(let i=0;i<120;i++){g.fillStyle='hsl('+(seed*7+R()*30)+',40%,40%)';g.beginPath();g.arc(R()*400,R()*300,5+R()*18,0,7);g.fill()}
-const u2=c.toDataURL('image/jpeg',.85);
-return [u1,u2];
+g.fillStyle='#6f8f4a';g.fillRect(0,0,400,300);
+for(let i=0;i<260;i++){g.fillStyle='hsl('+(85+R()*45)+','+(40+R()*30)+'%,'+(22+R()*28)+'%)';g.beginPath();g.arc(R()*400,R()*300,8+R()*22,0,7);g.fill()}
+g.fillStyle='#5b7fa8';g.beginPath();g.ellipse(340,60,40,28,0,0,7);g.fill();g.fillStyle='#9a958c';g.fillRect(0,250,150,50);
+const b=c.toDataURL('image/jpeg',.85);
+g.fillStyle='#c2a67f';g.fillRect(110,40,260*k,190*k);g.fillStyle='#d8d6d0';g.fillRect(130,60,120*k,70*k);
+return [b,c.toDataURL('image/jpeg',.85)];
 }
 
-const gr=u=>new Promise(res=>{const i=new Image();i.onload=()=>{const c=document.createElement('canvas');c.width=200;c.height=150;const g=c.getContext('2d');g.drawImage(i,0,0,200,150);const d=g.getImageData(0,0,200,150).data;let n=0,t=0;for(let q=0;q<d.length;q+=4){t++;if(d[q+1]>d[q]&&d[q+1]>d[q+2])n++}res(n/t*100)};i.src=u});
+const gr=u=>new Promise(res=>{const i=new Image();i.onload=()=>{const c=document.createElement('canvas');const sw=i.naturalWidth||i.width,sh=i.naturalHeight||i.height;const rx=Math.max(0,Math.min(99.9,Number(S.roi.x)||0))/100,ry=Math.max(0,Math.min(99.9,Number(S.roi.y)||0))/100,rw=Math.max(1,Math.min(100-rx*100,Number(S.roi.w)||100))/100,rh=Math.max(1,Math.min(100-ry*100,Number(S.roi.h)||100))/100;const sx=sw*rx,sy=sh*ry,cw=sw*rw,ch=sh*rh;c.width=200;c.height=Math.max(1,Math.round(200*ch/cw));const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(i,sx,sy,cw,ch,0,0,c.width,c.height);const d=g.getImageData(0,0,c.width,c.height).data;let n=0,t=0;for(let q=0;q<d.length;q+=4){if(d[q+3]===0)continue;t++;const r=d[q]/255,G=d[q+1]/255,b=d[q+2]/255,mx=Math.max(r,G,b),mn=Math.min(r,G,b),delta=mx-mn;let hue=0;if(delta){if(mx===G)hue=60*(((b-r)/delta)+2);else if(mx===r)hue=60*(((G-b)/delta)%6);else hue=60*(((r-G)/delta)+4)}if(hue<0)hue+=360;const sat=mx===0?0:delta/mx,val=mx;if(hue>=65&&hue<=170&&sat>=0.18&&val>=0.12)n++}res(t>0?n/t*100:null)};i.onerror=()=>res(null);i.src=u});
+
 async function pix(){if(S.img.b&&S.img.a){S.img.gb=await gr(S.img.b);S.img.ga=await gr(S.img.a);draw()}}
+function applyRoi(){const get=id=>Math.max(0,Math.min(100,Number(document.getElementById(id).value)||0));let x=get('roiX'),y=get('roiY'),w=get('roiW'),h=get('roiH');w=Math.max(1,Math.min(w,100-x));h=Math.max(1,Math.min(h,100-y));S.roi={x,y,w,h};pix()}
 
 function setDemo(){
-  S.demoN=(S.demoN+1)%3;
-  const seed=[123,456,789][S.demoN];
-  const[b,a]=mk(seed);
-  S.img={b,a};
-  S.imgDates={b:'2026-01-15',a:'2026-06-20'};
-  pix();
+  S.demoN++;
+  const [b,a]=mk(7+S.demoN*13,.6+(S.demoN%3)*.15);
+  S.img={b,a}; S.isDemo=true; S.imgRes=null; pix();
 }
 
-function up(w,inp){const f=inp.files[0];if(f){S.img[w]=URL.createObjectURL(f);pix();draw()}}
+function up(w,inp){
+  const f=inp.files[0];if(!f)return;
+  const i=new Image();i.onload=()=>{
+    const k=Math.min(1,900/Math.max(i.width,i.height)),c=document.createElement('canvas');
+    c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);
+    if(S.isDemo){S.img={b:null,a:null};S.isDemo=false}
+    S.img[w]=c.toDataURL('image/jpeg',.85);S.imgRes=null;pix();draw()
+  };i.src=URL.createObjectURL(f)
+}
 
 function imgRun(){return ai('img',async()=>{
-  if(!S.img.b||!S.img.a)throw{message:'請先提供影像'};
-  const r=await callGemini('比較植被變化，回傳 JSON：{"removal_pct":數字,"note":"說明"}',[S.img.b,S.img.a],true);
-  S.imgRes=r;
+  if(!S.img.b||!S.img.a)throw{message:'請先提供施工前與施工後影像'};
+  const prompt='請先確認是否為同一基地、同一範圍及相近視角，再比較可辨識的植被覆蓋變化。不要把屋頂、人工綠色物件或陰影直接當植被；若影像不一致或無法判斷，請在 note 說明不確定，不要猜測。removal_pct 定義為(施工前植被面積-施工後植被面積)/施工前植被面積*100；若施工後反而較多，允許回傳負數，不能強制改成 0。只回傳 JSON：{"removal_pct":-100到100的數字或 null,"note":"說明依據與限制"}';
+  S.imgRes=await callGemini(prompt,[S.img.b,S.img.a],true);
 })}
 
 function planRun(){return ai('plan',async()=>{
-  const sr=search(S.path);if(!sr.res.length)throw{message:'無改善路徑'};
-  S.plain=await callGemini('把改善路徑翻成白話建議，50字內：\n'+JSON.stringify(sr.res),[],false);
+  const sr=search(S.path);if(!sr.res.length)throw{message:'目前沒有可說明的改善路徑'};
+  const t=sr.res.map((r,i)=>'路徑'+(i+1)+'：'+IND.filter(x=>r.sc[x.k]!==S.sc[S.path][x.k]).map(x=>x.n+' '+S.sc[S.path][x.k]+'→'+r.sc[x.k]).join('、')+'；倍數 '+r.m+'×').join('\n');
+  const prompt='請下列由公式算出的改善路徑，翻成施工現場主管看得懂的白話建議，繁體中文，150 字內，不要更動任何數字或項目，不要自行加入新的路徑。\n'+t;
+  S.plain=await callGemini(prompt,[],false);
 })}
 
 function tnfdRun(){return ai('tnfd',async()=>{
-  S.tnfd=await callGemini('依 TNFD LEAP 架構草擬自然風險揭露報告，150字。',[],false);
+  const b=prem('b'),a=prem('a');
+  const t='施工前 S='+f(b.s)+'、施工後 S='+f(a.s)+'；各指標（施工前→施工後）：'+IND.map(x=>x.n+' '+S.sc.b[x.k]+'→'+S.sc.a[x.k]).join('、')+'；施工後風險等級：'+a.lv;
+  const prompt='依 TNFD 的 LEAP 四步驟（Locate 定位、Evaluate 評估、Assess 衡量、Prepare 準備），以繁體中文為虛擬 AIDC 基地草擬一段自然風險揭露文字，約 300 字，分四小段。只能使用下列資料，不可捏造其他數據，缺資料處註明「待補」，結尾註明「草稿，須人工覆核」。\n'+t;
+  S.tnfd=await callGemini(prompt,[],false);
 })}
 
 function setCl(i){S.cl=i;const c=CL[i];Object.assign(S.ins,{C:c[1],E:c[2],D:c[3],L:c[4],R:c[5]});draw()}
 
 function draw(){
   tabs(); summary();
-  // 嚴格對應 5 個分頁的函式陣列
   const pages = [pAssess, pPrem, pClaim, pRest, pAudit2];
   const renderFn = pages[S.tab] || pAssess;
   $('#pane').innerHTML = renderFn();
@@ -420,13 +446,15 @@ function draw(){
     const o={ins:S.ins,rs:S.rs,soc:S.soc,gov:S.gov,S:S}[e.dataset.o];
     if(o)o[e.dataset.k]=e.type==='number'?Math.max(0,Number(e.value)||0):e.value;
     if(e.dataset.o==='ins')S.cl=-1;
+    if(e.dataset.o==='S'&&e.dataset.k==='L')S.ins.L=S.L;
     draw();
   }));
 }
 
 function dl(t,n,m){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:m}));a.download=n;a.click()}
-$('#expJ').onclick=()=>dl(JSON.stringify({state:S},null,2),'aidc.json','application/json');
-$('#expC').onclick=()=>dl('階段,S,Q\n施工前,'+f(prem('b').s)+'\n施工後,'+f(prem('a').s),'aidc.csv','text/csv;charset=utf-8');
+$('#expJ').onclick=()=>dl(JSON.stringify({state:S,before:prem('b'),after:prem('a'),claim:claim(S.ins)},null,2),'aidc.json','application/json');
+$('#expC').onclick=()=>{const b=prem('b'),a=prem('a'),c=claim(S.ins);
+dl('\uFEFF階段,S,Q,倍數,年保費(萬)\n施工前,'+f(b.s)+','+f(b.q)+','+b.m+','+f(b.p)+'\n施工後,'+f(a.s)+','+f(a.q)+','+a.m+','+f(a.p)+'\n保險給付I,'+c.I+',U,'+c.U+',G,'+c.G,'aidc.csv','text/csv;charset=utf-8')};
 $('#tgl').onclick=()=>{const r=document.documentElement,d=r.dataset.theme==='dark';r.dataset.theme=d?'':'dark';};
 
 draw(); setDemo();
