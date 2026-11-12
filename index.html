@@ -1,44 +1,59 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-theme="cyber">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>AIDC 生態保費試算 - 智慧戰情室</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #07090e;
-  --card: #101726;
-  --ink: #f8fafc;
-  --mut: #94a3b8;
-  --seg: #1a233a;
-  --line: #26354a;
-  --accent: #38bdf8;
-  --radius: 16px;
+/* 🎨 3 種主題風格變數對應 */
+:root[data-theme="cyber"] {
+  --bg: #07090e; --card: #101726; --ink: #f8fafc; --mut: #94a3b8;
+  --seg: #1a233a; --line: #26354a; --accent: #38bdf8; --radius: 16px;
   --shadow: 0 10px 30px -5px rgba(0,0,0,0.5);
+}
+:root[data-theme="minimal"] {
+  --bg: #f8fafc; --card: #ffffff; --ink: #0f172a; --mut: #64748b;
+  --seg: #f1f5f9; --line: #e2e8f0; --accent: #0284c7; --radius: 12px;
+  --shadow: 0 4px 20px -2px rgba(0,0,0,0.05);
+}
+:root[data-theme="darksaas"] {
+  --bg: #0b0f19; --card: #131b2e; --ink: #ffffff; --mut: #8ba2cc;
+  --seg: #1c2640; --line: #243356; --accent: #6366f1; --radius: 20px;
+  --shadow: 0 12px 35px -5px rgba(0,0,0,0.6);
 }
 
 * { box-sizing: border-box; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
   font-family: "Plus Jakarta Sans", "Noto Sans TC", sans-serif;
-  font-size: 14.5px; line-height: 1.6;
+  font-size: 14.5px; line-height: 1.6; transition: background 0.3s, color 0.3s;
 }
 
 .w { max-width: 1240px; margin: auto; padding: 32px 20px 80px; }
 
-/* 🌟 現代高階 SaaS 標題與簡介區塊 */
+/* 🌟 風格切換器面板 */
+.theme-switcher {
+  display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 16px;
+}
+.theme-switcher span { font-size: 13px; font-weight: 700; color: var(--mut); margin-right: 4px; }
+.theme-btn {
+  background: var(--card); border: 1px solid var(--line); color: var(--mut);
+  padding: 6px 14px; border-radius: 99px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s;
+}
+.theme-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); box-shadow: 0 0 15px var(--accent); }
+
+/* 🌟 頂部標題區塊 */
 .hero {
   display: flex; justify-content: space-between; align-items: center;
   background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
   padding: 28px 36px; margin-bottom: 24px; box-shadow: var(--shadow);
-  flex-wrap: wrap; gap: 20px;
-  border-left: 6px solid var(--accent);
+  flex-wrap: wrap; gap: 20px; border-left: 6px solid var(--accent);
 }
 .hero h1 { font-size: clamp(24px, 4vw, 34px); margin: 0 0 6px; font-weight: 900; letter-spacing: -0.5px; }
 .hero p { color: var(--mut); margin: 0; font-size: 14px; font-weight: 500; }
 
-/* 🌟 滿版大膠囊導覽列 */
+/* 🌟 5 欄導覽列 */
 .tabs {
   display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px;
 }
@@ -50,11 +65,11 @@ body {
 }
 .tabs button:hover { border-color: var(--accent); color: var(--ink); transform: translateY(-2px); }
 .tabs button.on {
-  background: var(--accent); color: #07090e; border-color: var(--accent);
+  background: var(--accent); color: var(--bg); border-color: var(--accent);
   box-shadow: 0 0 25px rgba(56, 189, 248, 0.3); font-weight: 800; transform: translateY(-2px);
 }
 
-/* 🌟 4 大關鍵指標大卡片拼貼 */
+/* 🌟 關鍵指標拼貼 */
 .g { display: grid; gap: 16px; }
 .g4 { grid-template-columns: repeat(4, 1fr); }
 .g2 { grid-template-columns: repeat(2, 1fr); }
@@ -107,7 +122,7 @@ textarea { width: 100%; text-align: left; color: var(--ink); font-weight: 400; m
   border: 1px solid var(--line); background: var(--seg); color: var(--ink);
   padding: 10px 18px; border-radius: 99px; font: inherit; font-weight: 700; cursor: pointer; margin: 0 6px 8px 0; transition: 0.2s;
 }
-.chips button.on { background: var(--accent); color: #07090e; border-color: var(--accent); box-shadow: 0 0 15px rgba(56, 189, 248, 0.3); font-weight: 800; }
+.chips button.on { background: var(--accent); color: var(--bg); border-color: var(--accent); box-shadow: 0 0 15px rgba(56, 189, 248, 0.3); font-weight: 800; }
 
 table { width: 100%; border-collapse: collapse; }
 th, td { text-align: right; padding: 16px 12px; border-bottom: 1px solid var(--line); font-weight: 600; }
@@ -120,7 +135,7 @@ tr.hl td { background: var(--seg); color: var(--accent); font-weight: 800; }
 
 .btn {
   border: 0; border-radius: 99px; padding: 14px 28px; font: inherit; font-weight: 800;
-  color: #07090e; background: var(--accent); cursor: pointer; box-shadow: 0 4px 20px rgba(56, 189, 248, 0.3); transition: 0.2s;
+  color: var(--bg); background: var(--accent); cursor: pointer; box-shadow: 0 4px 20px rgba(56, 189, 248, 0.3); transition: 0.2s;
 }
 .btn:hover { opacity: 0.95; transform: translateY(-1px); box-shadow: 0 6px 25px rgba(56, 189, 248, 0.4); }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
@@ -143,6 +158,14 @@ blockquote { margin: 10px 0; padding: 12px; border-left: 4px solid var(--accent)
 </head>
 <body>
 <div class="w">
+  <!-- 🎨 風格切換器 -->
+  <div class="theme-switcher">
+    <span>切換風格：</span>
+    <button class="theme-btn active" onclick="setTheme('cyber', this)">極客戰情室</button>
+    <button class="theme-btn" onclick="setTheme('minimal', this)">極簡高質感白</button>
+    <button class="theme-btn" onclick="setTheme('darksaas', this)">暗黑 SaaS</button>
+  </div>
+
   <div class="hero">
     <div>
       <h1>AIDC 生態保費試算系統</h1>
@@ -164,6 +187,12 @@ blockquote { margin: 10px 0; padding: 12px; border-left: 4px solid var(--accent)
 </div>
 
 <script>
+function setTheme(name, btn) {
+  document.documentElement.setAttribute('data-theme', name);
+  document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
 const $=s=>document.querySelector(s);
 const IND=[
 {k:'h',n:'棲地敏感性',w:30,c:'#22c55e',i:'🍃',L:['人工化基地且未辨識敏感棲地','一般綠地','鄰接自然水域或半自然棲地','影響範圍涉及重要棲地','涉及保護區 or 保育物種重要棲地'],r:'棲地'},
@@ -235,7 +264,7 @@ return`<h2>損害發生與保險給付試算</h2><p class="k" style="margin-bott
 <div class="c"><div class="k">財務防護解析</div><div class="in">總復育成本 C<b>${f(x.C,1)} 萬</b></div><div class="in">保險給付 I<b>${f(r.I,1)} 萬</b></div><div class="in">自留資金支應<b>${f(Math.min(r.U,x.R),1)} 萬</b></div><div class="in" style="color:#ef4444">資金缺口 G<b>${f(r.G,1)} 萬</b></div><div class="in">資金覆蓋率 R÷U<b>${f(r.cov,1)}%</b></div></div></div>`}
 function setCl(i){S.cl=i;const c=CL[i];Object.assign(S.ins,{C:c[1],E:c[2],D:c[3],L:c[4],R:c[5]});draw()}
 function pRest(){const r=S.rs,cl=claim(S.ins),it=[['進度達成率',r.ad/r.ap*100,100,80,'ad','ap','累計完成面積 ÷ 當期計畫面積','綠 ≥100% 黃 ≥80% 且 <100% 紅 <80%'],['存活率',r.al/r.pl*100,90,85,'al','pl','存活株數 ÷ 初植株數','綠 ≥90% 黃 ≥85% 且 <90% 紅 <85%'],['監測完成率',r.md/r.mp*100,100,90,'md','mp','實際次數 ÷ 應完成次數','綠 ≥100% 黃 ≥90% 且 <90% 紅 <90%'],['資金覆蓋率',cl.cov,100,80,null,null,'連動理賠頁：R '+f(S.ins.R,1)+' 萬 ÷ U '+f(cl.U,1)+' 萬','綠 ≥100% 黃 ≥80% 且 <100% 紅 <80%']];
-const ls=it.map(x=>{const v=isFinite(x[1])?x[1]:0;return{x,v,l:light(v,x[2],x[3])}});
+const ls=it.map(x=>{const v=isFinite(x[1])?x[1]:0;return{x,v,l:light(v,x[2],x[3])}};
 let h=`<h2>生態復育進度與指標監控</h2><div class="g g2 stack" style="margin-top:20px">`;
 ls.forEach(({x,v,l})=>{h+=`<div class="c"><div class="row"><div class="row" style="gap:16px">${ringSvg(v,l[1])}<div><div class="k">${x[0]}</div><div class="big" style="font-size:26px">${f(v,1)}%</div></div></div><span class="pill ${l[2]}">${l[0]}</span></div>
 <div class="row" style="margin-top:14px;justify-content:flex-start">${x[4]?num(r,x[4])+' / '+num(r,x[5]):''}<span class="k">${x[6]}</span></div><div class="k" style="margin-top:10px">${x[7]}</div></div>`});
@@ -341,7 +370,7 @@ if(e.dataset.o==='ins')S.cl=-1;if(e.dataset.o==='S'&&e.dataset.k==='L')S.ins.L=S
 function dl(t,n,m){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:m}));a.download=n;a.click()}
 $('#expJ').onclick=()=>dl(JSON.stringify({state:S,before:prem('b'),after:prem('a'),claim:claim(S.ins)},null,2),'aidc.json','application/json');
 $('#expC').onclick=()=>{const b=prem('b'),a=prem('a'),c=claim(S.ins);
-dl('\uFEFF階段,S,Q,倍數,年保費(萬)\n施工前,'+f(b.s)+','+f(b.q)+','+b.m+','+f(b.p)+'\n施工後,'+f(a.s)+','+f(a.q)+','+a.m+','+f(a.p)+'\n保險給付I,'+c.I+',U,'+c.U+',G,'+c.G,'aidc.csv','text/csv;charset=utf-8')};
+dl('\uFEFF階段,S,Q,倍數,年保費(萬)\n施工前,'+f(b.s)+','+f(b.q)+','+b.m+','+f(b.p)+','+f(b.p)+'\n施工後,'+f(a.s)+','+f(a.q)+','+a.m+','+f(a.p)+'\n保險給付I,'+c.I+',U,'+c.U+',G,'+c.G,'aidc.csv','text/csv;charset=utf-8')};
 draw();setDemo();
 </script>
 </body>
