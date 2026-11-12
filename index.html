@@ -46,6 +46,18 @@ body {
 .header-bar h1 { font-size: 26px; margin: 0 0 6px; font-weight: 800; letter-spacing: -0.5px; }
 .header-bar p { color: var(--mut); margin: 0; font-size: 14px; }
 
+.tabs {
+  display: flex; gap: 8px; background: var(--card); border-radius: 99px; padding: 8px;
+  width: max-content; max-width: 100%; margin: 0 auto 28px; overflow-x: auto;
+  border: 1px solid var(--line); box-shadow: var(--shadow);
+}
+.tabs button {
+  border: 0; background: transparent; color: var(--mut); padding: 12px 24px;
+  border-radius: 99px; font: inherit; font-weight: 700; cursor: pointer; white-space: nowrap; transition: 0.2s;
+}
+.tabs button:hover { color: var(--ink); background: var(--accent-soft); }
+.tabs button.on { background: var(--accent); color: #fff; box-shadow: 0 4px 14px var(--accent-soft); }
+
 .g { display: grid; gap: 20px; }
 .g4 { grid-template-columns: repeat(4, 1fr); }
 .g2 { grid-template-columns: repeat(2, 1fr); }
@@ -129,7 +141,7 @@ blockquote { margin: 10px 0; padding: 10px 14px; border-left: 3px solid var(--ac
   <div class="header-bar">
     <div>
       <h1>AIDC 生態保費試算系統</h1>
-      <p>把生態風險，變成看得懂的保費（單頁完整不分頁版）</p>
+      <p>把生態風險，變成看得懂的保費</p>
     </div>
     <div style="display:flex; gap:10px;">
       <button class="btn" style="background:var(--bg); color:var(--ink); border:1px solid var(--line); box-shadow:none;" id="expJ">匯出 JSON</button>
@@ -137,10 +149,12 @@ blockquote { margin: 10px 0; padding: 10px 14px; border-left: 3px solid var(--ac
     </div>
   </div>
 
+  <div class="tabs" id="tabs"></div>
   <div class="g g4" id="sum" style="margin-bottom: 24px;"></div>
 
-  <!-- 單頁模式：所有功能區塊直接依序往下排列 -->
-  <div id="paneAll"></div>
+  <p class="note"><b style="color:var(--ink)">模擬情境。</b>以虛擬 AIDC 基地示範；分數、費率與成本皆為假設。AI 請求統一經由 Flask 後端代理呼叫 Gemini API。</p>
+
+  <div id="pane"></div>
 </div>
 
 <button class="tgl" id="tgl" title="切換深淺色">◐</button>
@@ -156,7 +170,7 @@ const IND=[
 {k:'n',n:'夜間施工干擾',w:5,c:'#8b5cf6',i:'🌙',L:['0%','大於 0% 至 10%','大於 10% 至 30%','大於 30% 至 50%','50% 以上'],r:'夜間'}];
 
 const CL=[['損失超過上限',300,250,30,200,80],['損失低於自負額',40,25,30,200,80],['部分保障、自留足夠',150,120,30,200,80]];
-const S={sc:{b:{h:3,v:3,r:3,t:3,m:2,n:3},a:{h:2,v:2,r:3,t:2,m:1,n:2}},soc:{b:70,a:85},gov:{b:70,a:90},L:200,rate:1,cl:0,
+const S={tab:0,sc:{b:{h:3,v:3,r:3,t:3,m:2,n:3},a:{h:2,v:2,r:3,t:2,m:1,n:2}},soc:{b:70,a:85},gov:{b:70,a:90},L:200,rate:1,cl:0,
 ins:{C:300,E:250,D:30,L:200,R:80},rs:{ad:4200,ap:5000,al:452,pl:500,md:11,mp:12},path:'b',own:'',due:'',rev:'',doc:'',docStage:'a',docRes:null,log:[],img:{b:null,a:null},imgDates:{b:'',a:''},demoN:0,imgRes:null,plain:'',tnfd:'',busy:'',err:''};
 
 const f=(n,d=2)=>Number(n).toFixed(d);
@@ -187,25 +201,19 @@ $('#sum').innerHTML=`<div class="c"><div class="k"><i class="tag" style="padding
 <div class="c"><div class="k">施工後假設年保費</div><div class="big">${wan(a.p)}</div><div class="k" style="margin-top:6px">${b.p>=a.p?'比施工前少 '+f(b.p-a.p,1)+' 萬':'比施工前多 '+f(a.p-b.p,1)+' 萬'}</div></div>
 <div class="c"><div class="k">資金缺口 G</div><div class="big">${wan(cl.G)}</div><div class="k" style="margin-top:6px">${cl.G>0?'<span class="pill hi">自留資金不足</span>':'<span class="pill lo">目前無缺口</span>'}</div></div>`}
 
+function tabs(){
+  const names = ['核心評估', '保費試算', '理賠防護', '復育監控', 'AI 智慧查核'];
+  $('#tabs').innerHTML = names.map((t,i)=>`<button class="${S.tab===i?'on':''}" onclick="S.tab=${i};draw()">${t}</button>`).join('');
+}
+
 function seg(st,k){return`<div class="seg">${[1,2,3,4,5].map(v=>`<button class="${S.sc[st][k]===v?'on':''}" onclick="S.sc.${st}.${k}=${v};draw()">${v}</button>`).join('')}</div>`}
 
 function num(o,k,min=0,max=1e9){return`<input type="number" value="${o[k]}" min="${min}" max="${max}" step="any" data-o="${o===S.ins?'ins':o===S.rs?'rs':o===S.soc?'soc':o===S.gov?'gov':'S'}" data-k="${k}">`}
 
-function renderAll(){
-  const b=prem('b'),a=prem('a'),x=S.ins,r=claim(x),tot=x.C||1,sr=search(S.path),cur=S.sc[S.path],bs=k=>S.busy===k;
-  const chip=(t,tx)=>`<button class="btn" style="padding:6px 14px;font-size:12px;${S.path===t?'':'background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;'}" onclick="S.path='${t}';draw()">${tx}</button>`;
-  const dchip=(t,tx)=>`<button class="btn" style="padding:6px 14px;font-size:12px;${S.docStage===t?'':'background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;'}" onclick="S.docStage='${t}';draw()">${tx}</button>`;
-  
-  const q2=Qf(a.s,S.soc.b,S.gov.b),m2=mult(q2,a.hi),p2=S.L*S.rate/100*m2,sc3=prem('a');
-  const rows=[['改善前',b.s,S.soc.b,S.gov.b,b.q,b.m,b.p],['只改善生態',a.s,S.soc.b,S.gov.b,q2,m2,p2],['三構面皆改善',a.s,S.soc.a,S.gov.a,sc3.q,sc3.m,sc3.p]];
-  
-  const restItems=[['進度達成率',S.rs.ad/S.rs.ap*100,100,80,'ad','ap','累計完成 ÷ 當期計畫'],['存活率',S.rs.al/S.rs.pl*100,90,85,'al','pl','存活株數 ÷ 初植株數'],['監測完成率',S.rs.md/S.rs.mp*100,100,90,'md','mp','實際次數 ÷ 應完成次數'],['資金覆蓋率',r.cov,100,80,null,null,'自留資金 ÷ 自行負擔']];
-  const ls=restItems.map(it=>{const v=isFinite(it[1])?it[1]:0;return{it,v,l:light(v,it[2],it[3])}});
-
-  let h='';
-
-  // 1. 核心評估
-  h+=`<h2>六個指標，一眼看懂風險</h2><p class="note" style="margin-top:0">依 TNFD LEAP 自訂的初步篩選表。點選 1–5 分調整指標。</p>
+// 索引 0：核心評估
+function pAssess(){
+  const b=prem('b'),a=prem('a');
+  let h=`<h2>六個指標，一眼看懂風險</h2><p class="note" style="margin-top:0">依 TNFD LEAP 自訂的初步篩選表。點選 1–5 分調整指標。</p>
   <div class="blk">
     <div class="row"><div class="k">生態風險分數儀表板</div>${(b.hi || a.hi)?'<span class="pill hi">⚠️ 偵測到高風險升級</span>':''}</div>
     <div class="g g2" style="grid-template-columns:1fr auto 1fr;align-items:center;text-align:center;gap:10px;margin-top:12px">
@@ -213,20 +221,25 @@ function renderAll(){
       <div><div class="k" style="justify-content:center">變化</div><div class="big">${a.s-b.s>0?'+':'−'}${f(Math.abs(a.s-b.s))}</div><span class="pill gy">${b.lv} → ${a.lv}</span></div>
       <div>${gauge(a.s,'#38bdf8')}<div>施工後</div><span class="pill ${pc(a.lv)}" style="margin-top:8px">${a.lv}風險</span></div>
     </div>
-  </div><div class="g g2">`;
-  IND.forEach(xi=>{const cb=xi.w*(S.sc.b[xi.k]-1)/4,ca=xi.w*(S.sc.a[xi.k]-1)/4,d=cb-ca;
-  h+=`<div class="c"><div class="row"><div class="row" style="gap:12px"><div style="background:${xi.c};color:#fff;width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:16px">${xi.i}</div><div><div style="font-weight:800;font-size:15px">${xi.n}</div><div class="k">權重 ${xi.w}%</div></div></div><span class="pill gy">1–5 分</span></div>
-  <div style="margin-top:14px"><b>施工前評分</b>：${S.sc.b[xi.k]} 分</div>${seg('b',xi.k)}<div class="k" style="margin-bottom:10px">${xi.L[S.sc.b[xi.k]-1]}</div>
-  <div><b>施工後評分</b>：${S.sc.a[xi.k]} 分</div>${seg('a',xi.k)}<div class="k" style="margin-bottom:10px">${xi.L[S.sc.a[xi.k]-1]}</div>
+  </div>
+  <div class="g g2">`;
+  IND.forEach(x=>{const cb=x.w*(S.sc.b[x.k]-1)/4,ca=x.w*(S.sc.a[x.k]-1)/4,d=cb-ca;
+  h+=`<div class="c"><div class="row"><div class="row" style="gap:12px"><div style="background:${x.c};color:#fff;width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:16px">${x.i}</div><div><div style="font-weight:800;font-size:15px">${x.n}</div><div class="k">權重 ${x.w}%</div></div></div><span class="pill gy">1–5 分</span></div>
+  <div style="margin-top:14px"><b>施工前評分</b>：${S.sc.b[x.k]} 分</div>${seg('b',x.k)}<div class="k" style="margin-bottom:10px">${x.L[S.sc.b[x.k]-1]}</div>
+  <div><b>施工後評分</b>：${S.sc.a[x.k]} 分</div>${seg('a',x.k)}<div class="k" style="margin-bottom:10px">${x.L[S.sc.a[x.k]-1]}</div>
   <div class="foot" style="display:flex;justify-content:space-between;border-top:1px solid var(--line);padding-top:10px;margin-top:10px"><span class="k">加權貢獻：<b style="color:var(--ink)">${f(cb)} → ${f(ca)}</b></span><span class="pill ${d>0?'lo':d<0?'hi':'gy'}">${d>0?'↓ '+f(d):d<0?'↑ '+f(-d):'持平'}</span></div></div>`});
   h+=`</div><div class="g g2" style="margin-top:20px"><div class="c"><div class="k">風險輪廓雷達圖</div><h3 style="margin:4px 0 14px;font-size:18px">施工前後面向對比</h3>${radar()}<div class="k" style="justify-content:center;gap:16px;display:flex;margin-top:10px"><span><i class="tag" style="background:#f97316;padding:2px 6px"></i> 施工前</span><span><i class="tag" style="background:#0284c7;padding:2px 6px"></i> 施工後</span></div></div>
   <div class="c"><div class="k">加權貢獻分析</div><h3 style="margin:4px 0 14px;font-size:18px">各指標變動幅度</h3>`;
-  IND.map(xi=>({xi,d:xi.w*(S.sc.b[xi.k]-S.sc.a[xi.k])/4})).sort((p,q)=>q.d-p.d).forEach(({xi,d})=>{const pa=xi.w*(S.sc.a[xi.k]-1)/4;
-  h+=`<div class="row" style="margin:12px 0"><div style="width:110px;font-weight:700">${xi.n}</div><div style="flex:1;background:var(--bg);height:8px;border-radius:99px;overflow:hidden;border:1px solid var(--line)"><div style="height:100%;background:var(--accent);width:${pa/30*100}%"></div></div><b style="width:50px;text-align:right;color:${d>0?'#16a34a':d<0?'#dc2626':'var(--mut)'}">${d>0?'−':d<0?'+':'±'}${f(Math.abs(d))}</b></div>`});
-  h+=`</div></div>`;
+  IND.map(x=>({x,d:x.w*(S.sc.b[x.k]-S.sc.a[x.k])/4})).sort((p,q)=>q.d-p.d).forEach(({x,d})=>{const pa=x.w*(S.sc.a[x.k]-1)/4;
+  h+=`<div class="row" style="margin:12px 0"><div style="width:110px;font-weight:700">${x.n}</div><div style="flex:1;background:var(--bg);height:8px;border-radius:99px;overflow:hidden;border:1px solid var(--line)"><div style="height:100%;background:var(--accent);width:${pa/30*100}%"></div></div><b style="width:50px;text-align:right;color:${d>0?'#16a34a':d<0?'#dc2626':'var(--mut)'}">${d>0?'−':d<0?'+':'±'}${f(Math.abs(d))}</b></div>`});
+  return h+`</div></div>`;
+}
 
-  // 2. 保費試算
-  h+=`<div class="c" style="margin-top:28px"><h2>ESG 分數決定保費倍數</h2><p class="note" style="margin-top:0">Q＝50% 環境＋20% 社會＋30% 治理，環境構面＝100−S。</p>
+// 索引 1：保費試算
+function pPrem(){
+  const b=prem('b'),a=prem('a'),q2=Qf(a.s,S.soc.b,S.gov.b),m2=mult(q2,a.hi),p2=S.L*S.rate/100*m2,sc3=prem('a');
+  const rows=[['改善前',b.s,S.soc.b,S.gov.b,b.q,b.m,b.p],['只改善生態',a.s,S.soc.b,S.gov.b,q2,m2,p2],['三構面皆改善',a.s,S.soc.a,S.gov.a,sc3.q,sc3.m,sc3.p]];
+  return `<h2>ESG 分數決定保費倍數</h2><p class="note" style="margin-top:0">Q＝50% 環境＋20% 社會＋30% 治理，環境構面＝100−S。</p>
   <div class="blk"><div class="k">假設年保費對比</div><div class="g g2" style="grid-template-columns:1fr auto 1fr;align-items:center;text-align:center;gap:12px;margin-top:14px">
   <div><span class="pill mi">施工前 · Q ${f(b.q)}</span><div class="big" style="font-size:38px">${f(b.p,1)}<small> 萬</small></div><div class="k">${f(b.m,1)}×</div></div>
   <div style="font-size:24px;color:var(--mut)">→</div>
@@ -236,11 +249,14 @@ function renderAll(){
   <div class="in">施工前 · 社會${num(S.soc,'b',0,100)}</div><div class="in">施工前 · 治理${num(S.gov,'b',0,100)}</div><div class="in">施工後 · 社會${num(S.soc,'a',0,100)}</div><div class="in">施工後 · 治理${num(S.gov,'a',0,100)}</div></div>
   <div class="c"><div class="k">保費參數與倍數規則</div><div class="in">保障上限 L（萬）${num(S,'L')}</div><div class="in">基準費率（%）${num(S,'rate')}</div>
   <div class="in"><span>Q ≥ 80</span><b>1.0×</b></div><div class="in"><span>60 ≤ Q < 80</span><b>1.3×</b></div><div class="in"><span>Q < 60 或生態高風險</span><b>1.6×</b></div></div></div>
-  <div class="c tw" style="margin-top:20px"><div class="k">情境方案比較</div><table><tr><th>情境方案</th><th>S / 社會 / 治理</th><th>Q 值</th><th>倍數</th><th>預估年保費</th></tr>${rows.map((row,i)=>`<tr class="${i==1?'hl':''}"><td>${row[0]}</td><td>${f(row[1])} / ${row[2]} / ${row[3]}</td><td>${f(row[4])}</td><td>${f(row[5],1)}</td><td>${f(row[6],1)} 萬</td></tr>`).join('')}</table></div></div>`;
+  <div class="c tw" style="margin-top:20px"><div class="k">情境方案比較</div><table><tr><th>情境方案</th><th>S / 社會 / 治理</th><th>Q 值</th><th>倍數</th><th>預估年保費</th></tr>${rows.map((r,i)=>`<tr class="${i==1?'hl':''}"><td>${r[0]}</td><td>${f(r[1])} / ${r[2]} / ${r[3]}</td><td>${f(r[4])}</td><td>${f(r[5],1)}</td><td>${f(r[6],1)} 萬</td></tr>`).join('')}</table></div>`;
+}
 
-  // 3. 理賠防護
-  h+=`<div class="c" style="margin-top:28px"><h2>損害發生與保險給付試算</h2><p class="note" style="margin-top:0">保險先賠、自留資金補上，剩下的即為資金缺口。</p>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">${CL.map((c,i)=>`<button class="btn" style="padding:6px 14px;font-size:12px;${S.cl===i?'':'background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;'}" onclick="setCl(${i})">${c[0]}</button>`).join('')}</div>
+// 索引 2：理賠防護
+function pClaim(){
+  const x=S.ins,r=claim(x),tot=x.C||1;
+  return `<h2>損害發生與保險給付試算</h2><p class="note" style="margin-top:0">保險先賠、自留資金補上，剩下的即為資金缺口。</p>
+  <div class="c"><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">${CL.map((c,i)=>`<button class="btn" style="padding:6px 14px;font-size:12px;${S.cl===i?'':'background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;'}" onclick="setCl(${i})">${c[0]}</button>`).join('')}</div>
   <div class="g g4" style="margin-bottom:14px">
     <div><div class="k"><i class="tag" style="background:rgba(2,132,199,0.12);color:var(--accent);margin-right:4px">保險</i>保險給付 I</div><div class="big" style="color:var(--accent)">${wan(r.I)}</div></div>
     <div><div class="k"><i class="tag" style="background:rgba(34,197,94,0.12);color:#16a34a;margin-right:4px">自留</i>自留支應</div><div class="big" style="color:#16a34a">${wan(Math.min(r.U,x.R))}</div></div>
@@ -251,18 +267,28 @@ function renderAll(){
     <div style="width:${r.I/tot*100}%;background:var(--accent)" title="保險給付"></div>
     <div style="width:${Math.min(r.U,x.R)/tot*100}%;background:#22c55e" title="自留支應"></div>
     <div style="width:${r.G/tot*100}%;background:#ef4444" title="資金缺口"></div>
-  </div>
+  </div></div>
   <div class="g g2" style="margin-top:20px"><div class="c"><div class="k">事故設定參數（萬元）</div>${[['C','總復育成本 C'],['E','保險範圍損失 E'],['D','自負額 D'],['L','保障上限 L'],['R','可動用自留 R']].map(([k,n])=>`<div class="in">${n}${num(x,k)}</div>`).join('')}</div>
-  <div class="c"><div class="k">試算結果摘要</div><div class="in">總復育成本 C<b>${f(x.C,1)} 萬</b></div><div class="in">保險給付 I<b>${f(r.I,1)} 萬</b></div><div class="in">企業自行負擔 U<b>${f(r.U,1)} 萬</b></div><div class="in" style="color:#ef4444">資金缺口 G<b>${f(r.G,1)} 萬</b></div><div class="in">資金覆蓋率<b>${f(r.cov,1)}%</b></div></div></div></div>`;
+  <div class="c"><div class="k">試算結果摘要</div><div class="in">總復育成本 C<b>${f(x.C,1)} 萬</b></div><div class="in">保險給付 I<b>${f(r.I,1)} 萬</b></div><div class="in">企業自行負擔 U<b>${f(r.U,1)} 萬</b></div><div class="in" style="color:#ef4444">資金缺口 G<b>${f(r.G,1)} 萬</b></div><div class="in">資金覆蓋率<b>${f(r.cov,1)}%</b></div></div></div>`;
+}
 
-  // 4. 復育監控
-  h+=`<div class="c" style="margin-top:28px"><h2>生態復育進度與指標監控</h2><div class="g g2" style="margin-top:20px">`;
-  ls.forEach(({it,v,l})=>{h+=`<div class="c"><div class="row"><div class="row" style="gap:14px">${ringSvg(v,l[1])}<div><div class="k">${it[0]}</div><div class="big" style="font-size:26px">${f(v,1)}%</div></div></div><span class="pill ${l[2]}">${l[0]}</span></div>
-  <div class="row" style="margin-top:14px;justify-content:flex-start">${it[4]?num(S.rs,it[4])+' / '+num(S.rs,it[5]):''}<span class="k">${it[6]}</span></div></div>`});
-  h+=`</div><div class="c" style="margin-top:20px"><div class="k">復育改善紀錄與負責人</div><div class="in">責任人設定<input type="text" style="width:60%" value="${S.own}" data-o="S" data-k="own"></div><div class="in">改善期限<input type="text" style="width:60%" placeholder="YYYY-MM-DD" value="${S.due}" data-o="S" data-k="due"></div><div class="in">複查紀錄<input type="text" style="width:60%" value="${S.rev}" data-o="S" data-k="rev"></div></div></div>`;
+// 索引 3：復育監控
+function pRest(){
+  const r=S.rs,cl=claim(S.ins),it=[['進度達成率',r.ad/r.ap*100,100,80,'ad','ap','累計完成 ÷ 當期計畫'],['存活率',r.al/r.pl*100,90,85,'al','pl','存活株數 ÷ 初植株數'],['監測完成率',r.md/r.mp*100,100,90,'md','mp','實際次數 ÷ 應完成次數'],['資金覆蓋率',cl.cov,100,80,null,null,'自留資金 ÷ 自行負擔']];
+  const ls=it.map(x=>{const v=isFinite(x[1])?x[1]:0;return{x,v,l:light(v,x[2],x[3])}});
+  let h=`<h2>生態復育進度與指標監控</h2><div class="g g2" style="margin-top:20px">`;
+  ls.forEach(({x,v,l})=>{h+=`<div class="c"><div class="row"><div class="row" style="gap:14px">${ringSvg(v,l[1])}<div><div class="k">${x[0]}</div><div class="big" style="font-size:26px">${f(v,1)}%</div></div></div><span class="pill ${l[2]}">${l[0]}</span></div>
+  <div class="row" style="margin-top:14px;justify-content:flex-start">${x[4]?num(r,x[4])+' / '+num(r,x[5]):''}<span class="k">${x[6]}</span></div></div>`});
+  h+=`</div><div class="c" style="margin-top:20px"><div class="k">復育改善紀錄與負責人</div><div class="in">責任人設定<input type="text" style="width:60%" value="${S.own}" data-o="S" data-k="own"></div><div class="in">改善期限<input type="text" style="width:60%" placeholder="YYYY-MM-DD" value="${S.due}" data-o="S" data-k="due"></div><div class="in">複查紀錄<input type="text" style="width:60%" value="${S.rev}" data-o="S" data-k="rev"></div></div>`;
+  return h;
+}
 
-  // 5. AI 智慧查核與遙測影像比對
-  h+=`<div class="c" style="margin-top:28px"><h2>AI 智慧查核與決策輔助</h2><p class="note" style="margin-top:0">透過 Gemini AI 協助文件解析與影像交叉驗證。</p>
+// 索引 4：AI 智慧查核（包含遙測影像交叉比對）
+function pAudit2(){
+  const sr=search(S.path),cur=S.sc[S.path],bs=k=>S.busy===k;
+  const chip=(t,tx)=>`<button class="btn" style="padding:6px 14px;font-size:12px;${S.path===t?'':'background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;'}" onclick="S.path='${t}';draw()">${tx}</button>`;
+  const dchip=(t,tx)=>`<button class="btn" style="padding:6px 14px;font-size:12px;${S.docStage===t?'':'background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none;'}" onclick="S.docStage='${t}';draw()">${tx}</button>`;
+  return `<h2>AI 智慧查核與決策輔助</h2><p class="note" style="margin-top:0">透過 Gemini AI 協助文件解析與影像交叉驗證。</p>
   <div class="ai">Secure Cloud AI 後端代理通道運行中</div>
   ${S.err?`<div class="err">${esc(S.err)}</div>`:''}
   
@@ -296,7 +322,7 @@ function renderAll(){
   <div class="c" style="margin-top:20px">
     <div class="row"><b>③ 最佳保費改善路徑試算</b><span class="tag">AI 策略</span></div>
     <div style="margin:14px 0;display:flex;gap:8px;">${chip('b','施工前')}${chip('a','施工後')}</div>
-    ${sr.res.map((rItem,i)=>`<div class="path"><b>#${i+1}</b>${IND.filter(xi=>rItem.sc[xi.k]!==cur[xi.k]).map(xi=>`<span class="t">${xi.n} ${cur[xi.k]}→${rItem.sc[xi.k]}</span>`).join('')}<b class="r">${f(rItem.m,1)}×<div class="k">年保費 ${f(S.L*S.rate/100*rItem.m,1)}萬</div></b></div>`).join('')}
+    ${sr.res.map((r,i)=>`<div class="path"><b>#${i+1}</b>${IND.filter(x=>r.sc[x.k]!==cur[x.k]).map(x=>`<span class="t">${x.n} ${cur[x.k]}→${r.sc[x.k]}</span>`).join('')}<b class="r">${f(r.m,1)}×<div class="k">年保費 ${f(S.L*S.rate/100*r.m,1)}萬</div></b></div>`).join('')}
     <div style="margin-top:12px"><button class="btn go" style="padding:10px 18px;font-size:13.5px;" onclick="planRun()">生成白話建議</button></div>
     ${S.plain?`<div class="ev" style="margin-top:12px">${esc(S.plain)}</div>`:''}
   </div>
@@ -305,9 +331,7 @@ function renderAll(){
     <div class="row"><b>④ TNFD 自然風險揭露草稿</b><span class="tag">AI 生成</span></div>
     <div style="margin-top:14px"><button class="btn go" style="padding:10px 18px;font-size:13.5px;" onclick="tnfdRun()">生成揭露報告</button></div>
     ${S.tnfd?`<textarea style="margin-top:12px">${esc(S.tnfd)}</textarea>`:''}
-  </div></div>`;
-
-  $('#paneAll').innerHTML = h;
+  </div>`;
 }
 
 function search(st){const cur={...S.sc[st]},s0=calcS(cur),h0=realLvl(s0,cur)==='高',q0=Qf(s0,S.soc[st],S.gov[st]),m0=mult(q0,h0);if(m0===1)return{m0,res:[]};
@@ -386,9 +410,13 @@ function tnfdRun(){return ai('tnfd',async()=>{
 function setCl(i){S.cl=i;const c=CL[i];Object.assign(S.ins,{C:c[1],E:c[2],D:c[3],L:c[4],R:c[5]});draw()}
 
 function draw(){
-  summary();
-  renderAll();
-  document.querySelectorAll('input').forEach(e=>e.addEventListener('change',()=>{
+  tabs(); summary();
+  // 嚴格對應 5 個分頁函式：0:核心評估, 1:保費試算, 2:理賠防護, 3:復育監控, 4:AI 智慧查核
+  const pages = [pAssess, pPrem, pClaim, pRest, pAudit2];
+  const renderFn = pages[S.tab] || pAssess;
+  $('#pane').innerHTML = renderFn();
+  
+  document.querySelectorAll('#pane input').forEach(e=>e.addEventListener('change',()=>{
     const o={ins:S.ins,rs:S.rs,soc:S.soc,gov:S.gov,S:S}[e.dataset.o];
     if(o)o[e.dataset.k]=e.type==='number'?Math.max(0,Number(e.value)||0):e.value;
     if(e.dataset.o==='ins')S.cl=-1;
