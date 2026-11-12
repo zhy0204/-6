@@ -165,7 +165,7 @@ const IND=[
 {k:'h',n:'棲地敏感性',w:30,c:'#22c55e',i:'🍃',L:['人工化基地且未辨識敏感棲地','一般綠地','鄰接自然水域或半自然棲地','影響範圍涉及重要棲地','涉及保護區 or 保育物種重要棲地'],r:'棲地'},
 {k:'v',n:'植被移除比例',w:25,c:'#10b981',i:'🌳',L:['低於 10%','10% 至未滿 25%','25% 至未滿 50%','50% 至 75%','高於 75%'],r:'植被'},
 {k:'r',n:'逕流與透水影響',w:15,c:'#3b82f6',i:'💧',L:['透水及逕流控制完善並有紀錄','有控制設施但成效待驗證','局部積水或控制不完整','缺乏必要控制','已記錄泥沙外流或水體受損'],r:'逕流'},
-{k:'t',n:'冷卻排熱影響',w:15,c:'#f97316',i:'🌡',L:['無直接熱水排放且有紀錄','有降溫並持續監測','排放溫差或影響待確認','icon異常升溫紀錄','有升溫及生態損害證據'],r:'排熱'},
+{k:'t',n:'冷卻排熱影響',w:15,c:'#f97316',i:'🌡',L:['無直接熱水排放且有紀錄','有降溫並持續監測','排放溫差或影響待確認','有異常升溫紀錄','有升溫及生態損害證據'],r:'排熱'},
 {k:'m',n:'監測與治理',w:10,c:'#64748b',i:'📈',L:['定期監測、可追溯並持續改善','定期監測但紀錄不完整','不定期監測','缺乏系統且異常未改善','重大異常未處理或無法追溯'],r:'監測'},
 {k:'n',n:'夜間施工干擾',w:5,c:'#8b5cf6',i:'🌙',L:['0%','大於 0% 至 10%','大於 10% 至 30%','大於 30% 至 50%','50% 以上'],r:'夜間'}];
 
@@ -175,7 +175,6 @@ ins:{C:300,E:250,D:30,L:200,R:80},rs:{ad:4200,ap:5000,al:452,pl:500,md:11,mp:12}
 
 const f=(n,d=2)=>Number(n).toFixed(d);
 const calcS=sc=>100*IND.reduce((s,x)=>s+x.w/100*(sc[x.k]-1)/4,0);
-const lvl=(s,sc)=>{if(!sc||typeof sc!=='object')return'中';return(Object.values(sc).includes(5)||s>=60)?'高':s<30?'低':s<60?'中':'High'};
 const realLvl=(s,sc)=>(Object.values(sc).includes(5)||s>=60)?'高':s<30?'低':s<60?'中':'高';
 const mult=(q,hi)=>hi?1.6:q>=80?1:q>=60?1.3:1.6;
 const Qf=(s,so,go)=>.5*(100-s)+.2*so+.3*go;
@@ -311,13 +310,11 @@ function docRun(){return ai('doc',async()=>{
 function adopt(i){const it=S.docRes[i];S.sc[S.docStage][it.k]=it.score;it.done=true;S.log.push({t:new Date().toLocaleTimeString(),k:it.k,score:it.score});draw()}
 function upTxt(inp){const f=inp.files[0];if(f)f.text().then(t=>{S.doc=t;S.docRes=null;draw()})}
 
-// 🌟 多組示範影像產生器
 function mk(seed,k){let s=seed;const R=()=>(s=(s*1664525+1013904223)>>>0)/4294967296;
 const c=document.createElement('canvas');c.width=400;c.height=300;const g=c.getContext('2d');
 g.fillStyle='hsl('+(seed%360)+',40%,35%)';g.fillRect(0,0,400,300);
-for(let i=0;i<180;i++){g.fillStyle='hsl('+(seed*13+R()*40)+',50%,28%)';g.beginPath();g.arc(R()*400,R()*300,8+R()*25,0,7);g.fill()}
+for(let i=0;i<180;i++){g.fillStyle='hsl('+(seed*13+R()*40)+',50%,28%)';g.beginPath();g.arc(R()*400,R()*300,8+R()*20,0,7);g.fill()}
 const u1=c.toDataURL('image/jpeg',.85);
-// 第二張（模擬施工後變化）
 g.fillStyle='hsl('+(seed%360+50)+',30%,45%)';g.fillRect(0,0,400,300);
 for(let i=0;i<120;i++){g.fillStyle='hsl('+(seed*7+R()*30)+',40%,40%)';g.beginPath();g.arc(R()*400,R()*300,5+R()*18,0,7);g.fill()}
 const u2=c.toDataURL('image/jpeg',.85);
@@ -372,7 +369,7 @@ function pAudit2(){
   
   <div class="c" style="margin-top:20px">
     <div class="row"><b>② 遙測影像 AI 交叉比對</b><span class="tag">Gemini AI</span></div>
-    <div style="margin:10px 0; font-size:13px; color:var(--mut);">
+    <div style="margin:10px 0; font-size:13.5px; color:var(--mut);">
       可先至 <a href="https://earth.google.com/web/" target="_blank" style="color:var(--accent); font-weight:700;">Google Earth 網頁版</a> 查詢並擷取歷史空拍影像。
     </div>
     <div class="imgs">${['b','a'].map(w=>`<div>
