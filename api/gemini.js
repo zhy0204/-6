@@ -11,7 +11,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ success: false, error: '伺服器未設定 GEMINI_API_KEY' });
     }
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
 
     let parts = [{ text: prompt }];
     if (images && images.length > 0) {
